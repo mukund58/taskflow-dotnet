@@ -32,7 +32,8 @@ public class AuthService : IAuthService
         return "User Registered";
     }
 
-    public async Task<string> Login(LoginDto dto){
+    public async Task<string> Login(LoginDto dto)
+    {
         var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
 
         if (user == null || !BCrypt.Verify(dto.Password, user.PasswordHash))
