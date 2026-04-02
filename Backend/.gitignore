@@ -1,0 +1,29 @@
+# Build outputs
+bin/
+obj/
+
+# Environment files
+.env
+.env.*
+
+# IDE / Editor
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+
+# NuGet
+*.nupkg
+**/packages/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+docker-compose.override.yml
