@@ -2,7 +2,7 @@
 
 ### 🟢 CORE (MUST HAVE — non-negotiable)
 - [ ] 🔐 **Auth System**
-  - [ ] Register / Login
+  - [x] Register / Login
   - [ ] JWT based auth
   - [ ] Roles:
     - [ ] Admin
@@ -10,10 +10,10 @@
   - [ ] *No OAuth / Google login*
 
 - [ ] 📋 **Task Management (CRUD)**
-  - [ ] Create task
-  - [ ] Assign user
+  - [x] Create task
+  - [x] Assign user
   - [ ] Priority: Low / Medium / High
-  - [ ] Status: Todo / In Progress / Done
+  - [x] Status: Todo / In Progress / Done
 
 - [ ] 👥 **User Workload Tracking**
   - [ ] Count tasks per user
@@ -45,12 +45,12 @@
 ---
 
 ## ✅ Minimum APIs
-- [ ] POST   `/auth/register`
-- [ ] POST   `/auth/login`
+- [x] POST   `/auth/register`
+- [x] POST   `/auth/login`
 - [ ] GET    `/users`
 - [ ] GET    `/users/:id`
-- [ ] POST   `/tasks`
-- [ ] GET    `/tasks`
+- [x] POST   `/tasks`
+- [x] GET    `/tasks`
 - [ ] PUT    `/tasks/:id`
 - [ ] DELETE `/tasks/:id`
 - [ ] GET    `/dashboard`
@@ -73,6 +73,6 @@
 
 ## 🧱 Simple Architecture
 - [ ] Frontend (React)
-- [ ] Backend (Node/.NET API)
+- [x] Backend (Node/.NET API)
 - [ ] MongoDB Atlas
 - [ ] Gemini API
