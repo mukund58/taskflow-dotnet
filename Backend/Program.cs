@@ -8,11 +8,13 @@ DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Database connection string is missing or empty. Set the CONNECTION_STRING environment variable.");
 }
 // var connectionString = "Host=db;Port=5432;Database=sprintforge;Username=postgres;Password=****";
+
 
 // var connectionString = builder.Configuration["CONNECTION_STRING"];
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
@@ -26,6 +28,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
