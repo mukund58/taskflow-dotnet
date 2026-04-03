@@ -78,6 +78,14 @@
 - [ ] GET `/users`
 - [ ] GET `/users/:id`
 
+### Project
+
+- [x] GET `/project`
+- [ ] GET `/project/:id`
+- [x] POST `/project`
+- [ ] PUT `/project/:id`
+- [ ] DELETE `/project/:id`
+
 ### Tasks
 
 - [x] POST `/tasks`
@@ -85,8 +93,8 @@
 - [ ] GET `/tasks/:id`
 - [ ] PUT `/tasks/:id`
 - [ ] DELETE `/tasks/:id`
-- [ ] PATCH `/tasks/:id/status`
-- [ ] PATCH `/tasks/:id/assign`
+- [x] PATCH `/tasks/:id/status`
+- [x] PATCH `/tasks/:id/assign`
 
 ### Dashboard
 
@@ -150,3 +158,47 @@
 - [x] Backend (.NET API)
 - [x] PostgreSQL
 - [ ] Gemini API
+
+---
+
+## 🐳 Run With Docker
+
+This project uses Docker Compose from the Backend folder. It starts the API and a PostgreSQL container together.
+
+### 1. Go to the backend folder
+
+```bash
+cd Backend
+```
+
+### 2. Make sure `.env` exists
+
+The backend expects these values in `Backend/.env`:
+
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `CONNECTION_STRING`
+
+### 3. Start the containers
+
+```bash
+docker compose up --build
+```
+
+### 4. Open the API
+
+- API: `http://localhost:5000`
+- Swagger: `http://localhost:5000/swagger`
+
+### 5. Stop the containers
+
+```bash
+docker compose down
+```
+
+If you want to remove the database volume too:
+
+```bash
+docker compose down -v
+```
