@@ -3,10 +3,20 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Data;
 using Backend.Services.Interface;
 using Backend.Services.Implementations;
+using Backend.Models.DTOs;
+using Backend.Validation;
 using dotenv.net;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddControllers().AddFluentValidation(config =>
+{
+    config.RegisterValidatorsFromAssemblyContaining<Program>();
+});
+
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -29,6 +39,9 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IValidator<CreateTaskDto>, CreateTaskDtoValidator>();
+builder.Services.AddScoped<IValidator<UpdateTaskStatusDto>, UpdateTaskStatusDtoValidator>();
+builder.Services.AddScoped<IValidator<AssignTaskDto>, AssignTaskDtoValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
