@@ -5,7 +5,7 @@
 ### 🔐 Auth System
 
 - [x] Register / Login
-- [ ] JWT based auth
+- [x] JWT based auth
 - [ ] Refresh token (optional but 🔥 bonus)
 - [ ] Roles:
   - [ ] Admin
@@ -111,7 +111,7 @@
 ### ✅ MUST
 
 - [X] Authentication (JWT)
-- [X] Authorization (roles + ownership)
+- [ ] Authorization (roles + ownership)
 - [X] Validation (FluentValidation)
 - [ ] Logging (Serilog or basic)
 - [X] CORS
@@ -120,10 +120,10 @@
 ### ⚡ SHOULD HAVE
 
 - [ ] Pagination
-- [ ] Filtering
+- [X] Filtering
 - [ ] Seeding (test data)
 - [ ] API versioning (`/api/v1`)
-- [ ] Rate limiting
+- [X] Rate limiting
 - [ ] Soft delete
 
 ### 🔥 BONUS
