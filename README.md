@@ -118,7 +118,7 @@
 - [X] Validation (FluentValidation)
 - [ ] Logging (Serilog or basic)
 - [X] CORS
-- [ ] Exception middleware
+- [X] Exception middleware
 
 ### ⚡ SHOULD HAVE
 
@@ -142,11 +142,10 @@
   - [ ] Role-based access
   - [ ] Resource ownership
 - [ ] Refresh token system
-- [ ] Exception middleware (global)
-  - [ ] Standard API response format
+- [x] Exception middleware (global)
+  - [x] Standard API response format
 - [ ] Transactions
 - [ ] Concurrency (RowVersion)
-- [ ] Repository layer
 - [ ] Indexing (DB performance)
   - [ ] Task.Status
   - [ ] Task.AssignedUserId
