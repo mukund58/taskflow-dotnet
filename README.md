@@ -146,7 +146,6 @@
   - [x] Standard API response format
 - [ ] Transactions
 - [ ] Concurrency (RowVersion)
-- [ ] Repository layer
 - [ ] Indexing (DB performance)
   - [ ] Task.Status
   - [ ] Task.AssignedUserId
