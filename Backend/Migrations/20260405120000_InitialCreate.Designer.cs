@@ -78,7 +78,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.TaskItem, bool>>)(task => !task.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(task => !Microsoft.EntityFrameworkCore.EF.Property<bool>(task, "IsDeleted")));
 
                     b.ToTable("Tasks");
                 });

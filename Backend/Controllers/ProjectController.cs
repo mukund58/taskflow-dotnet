@@ -20,12 +20,14 @@ public class ProjectController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        return Ok(await _service.GetAll());
+        var projects = await _service.GetAll();
+        return Ok(ApiResponseDto<List<Backend.Models.Entities.Project>>.Ok(projects, "Projects retrieved"));
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ProjectDto dto)
     {
-        return Ok(await _service.Create(dto));
+        var project = await _service.Create(dto);
+        return Ok(ApiResponseDto<Backend.Models.Entities.Project>.Ok(project, "Project created"));
     }
 }

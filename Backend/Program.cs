@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Data;
+using Backend.Middleware;
 using Backend.Services.Interfaces;
 using Backend.Services.Implementations;
 using Backend.Models.DTOs;
@@ -9,6 +10,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using AspNetCoreRateLimit;
 DotEnv.Load();
@@ -35,6 +37,20 @@ builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(entry => entry.Value?.Errors.Count > 0)
+            .ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value!.Errors.Select(error => error.ErrorMessage).ToArray());
+
+        var response = ApiResponseDto<object>.Fail("Validation failed", errors);
+        return new BadRequestObjectResult(response);
+    };
+});
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -96,6 +112,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors("AllowAllOrigins");
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseIpRateLimiting();
 
