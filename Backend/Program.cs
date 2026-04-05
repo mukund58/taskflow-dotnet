@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Data;
 using Backend.Services.Interfaces;
 using Backend.Services.Implementations;
+using Backend.Models.DTOs;
+using Backend.Validation;
 using dotenv.net;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -79,6 +81,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IValidator<CreateTaskDto>, CreateTaskDtoValidator>();
+builder.Services.AddScoped<IValidator<UpdateTaskStatusDto>, UpdateTaskStatusDtoValidator>();
+builder.Services.AddScoped<IValidator<AssignTaskDto>, AssignTaskDtoValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

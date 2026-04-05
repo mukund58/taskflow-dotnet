@@ -29,33 +29,6 @@ public class TaskController : ControllerBase
         return Ok(await _service.GetAll(status, assignedTo));
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTaskDto dto)
-    {
-        try
-        {
-            return Ok(await _service.Update(id, dto));
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound(new { message = "Task not found" });
-        }
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        try
-        {
-            await _service.Delete(id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound(new { message = "Task not found" });
-        }
-    }
-
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateTaskStatusDto dto)
     {
