@@ -16,17 +16,17 @@
 
 - [x] Create task
 - [x] Assign user
-- [x] Update task
-- [x] Delete task
+- [ ] Update task
+- [ ] Delete task
 - [x] Status:
   - [x] Todo
   - [x] In Progress
   - [x] Done
 - [ ] Priority:
   - [ ] Low / Medium / High
-- [ ] Filter:
-  - [ ] By status
-  - [ ] By assigned user
+- [x] Filter:
+  - [x] By status
+  - [x] By assigned user
 - [ ] Pagination (`?page=1&pageSize=10`)
 
 ### 👥 User Workload Tracking
@@ -49,9 +49,10 @@
 - [ ] Suggest best user
 - [ ] Suggest priority
 - [ ] Return explanation
+- [ ] Deterministic input/output shape
 - [ ] Use Gemini API
 - [ ] Fallback logic (if AI fails -> basic logic)
-  - Example: Assign user with least tasks
+  - Example: Assign user with least active tasks
 
 ### 🌐 Deployment
 
@@ -91,8 +92,8 @@
 - [x] POST `/tasks`
 - [x] GET `/tasks`
 - [ ] GET `/tasks/:id`
-- [x] PUT `/tasks/:id`
-- [x] DELETE `/tasks/:id`
+- [ ] PUT `/tasks/:id`
+- [ ] DELETE `/tasks/:id`
 - [x] PATCH `/tasks/:id/status`
 - [x] PATCH `/tasks/:id/assign`
 
@@ -112,6 +113,8 @@
 
 - [X] Authentication (JWT)
 - [ ] Authorization (roles + ownership)
+  - [ ] Role-based access
+  - [ ] Resource ownership
 - [X] Validation (FluentValidation)
 - [ ] Logging (Serilog or basic)
 - [X] CORS
@@ -119,8 +122,7 @@
 
 ### ⚡ SHOULD HAVE
 
-- [ ] Pagination
-- [X] Filtering
+- [ ] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
 - [ ] Seeding (test data)
 - [ ] API versioning (`/api/v1`)
 - [X] Rate limiting
@@ -129,6 +131,49 @@
 ### 🔥 BONUS
 
 - [ ] Caching (Redis)
+
+---
+
+## 🚨 Priority Order (FROM REVIEW)
+
+### PHASE 1 (Finish Core Properly)
+
+- [ ] Authorization (roles + ownership)
+  - [ ] Role-based access
+  - [ ] Resource ownership
+- [ ] Exception middleware
+  - [ ] Standard error response format
+- [ ] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
+- [ ] Refresh token
+
+### PHASE 2 (Make it Real)
+
+- [ ] Activity log
+  - [ ] action
+  - [ ] userId
+  - [ ] timestamp
+  - [ ] entityId
+- [ ] Transactions
+- [ ] Concurrency handling (RowVersion)
+- [ ] Indexing
+  - [ ] Task.Status
+  - [ ] Task.AssignedUserId
+  - [ ] Task.ProjectId
+- [ ] Repository layer
+- [ ] Soft delete
+- [ ] Seeding (5 users / 20 tasks / 2 projects)
+
+### PHASE 3 (Standout)
+
+- [ ] SignalR
+  - [ ] Task status updates live
+  - [ ] Assignment updates live
+- [ ] AI assignment
+  - [ ] Deterministic input/output
+  - [ ] Return explanation
+  - [ ] Fallback to least active tasks
+- [ ] Dashboard
+- [ ] Testing (xUnit)
 
 ---
 
