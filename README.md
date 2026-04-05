@@ -16,8 +16,8 @@
 
 - [x] Create task
 - [x] Assign user
-- [ ] Update task
-- [ ] Delete task
+- [x] Update task
+- [x] Delete task
 - [x] Status:
   - [x] Todo
   - [x] In Progress
@@ -126,7 +126,7 @@
 - [ ] Seeding (test data)
 - [ ] API versioning (`/api/v1`)
 - [X] Rate limiting
-- [ ] Soft delete
+- [X] Soft delete
 
 ### 🔥 BONUS
 
@@ -134,46 +134,69 @@
 
 ---
 
-## 🚨 Priority Order (FROM REVIEW)
+## ⚔️ Team Split Strategy
 
-### PHASE 1 (Finish Core Properly)
+### 🧠 You (Lead / Core / Hard)
 
 - [ ] Authorization (roles + ownership)
   - [ ] Role-based access
   - [ ] Resource ownership
-- [ ] Exception middleware
-  - [ ] Standard error response format
-- [ ] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
-- [ ] Refresh token
-
-### PHASE 2 (Make it Real)
-
-- [ ] Activity log
-  - [ ] action
-  - [ ] userId
-  - [ ] timestamp
-  - [ ] entityId
+- [ ] Refresh token system
+- [ ] Exception middleware (global)
+  - [ ] Standard API response format
 - [ ] Transactions
-- [ ] Concurrency handling (RowVersion)
-- [ ] Indexing
+- [ ] Concurrency (RowVersion)
+- [ ] Repository layer
+- [ ] Indexing (DB performance)
   - [ ] Task.Status
   - [ ] Task.AssignedUserId
   - [ ] Task.ProjectId
-- [ ] Repository layer
-- [ ] Soft delete
-- [ ] Seeding (5 users / 20 tasks / 2 projects)
-
-### PHASE 3 (Standout)
-
-- [ ] SignalR
-  - [ ] Task status updates live
-  - [ ] Assignment updates live
-- [ ] AI assignment
-  - [ ] Deterministic input/output
-  - [ ] Return explanation
-  - [ ] Fallback to least active tasks
-- [ ] Dashboard
+- [X] Soft delete
+- [ ] AI assignment (full logic)
+  - [ ] Fallback logic
+  - [ ] Deterministic API shape
+- [ ] SignalR integration
+- [ ] Activity log system
+- [ ] Logging (Serilog)
 - [ ] Testing (xUnit)
+
+### 🧑‍💻 Teammate (Easy / Safe / Visible)
+
+- [x] Update task
+- [x] Delete task
+- [ ] GET `/tasks/:id`
+- [ ] GET `/users`
+- [ ] GET `/users/:id`
+- [ ] Tasks per user
+- [ ] Pending vs completed
+- [ ] Total counts
+- [ ] Workload distribution
+- [ ] GET `/dashboard`
+- [ ] Count tasks per user
+- [ ] Active tasks
+- [ ] Completed tasks
+- [ ] Overdue tasks
+- [ ] Pagination
+- [ ] Combine filtering + pagination
+- [ ] Backend → Render
+- [ ] DB → PostgreSQL
+- [ ] Basic env setup
+- [ ] Seeding (5 users / 20 tasks / 2 projects)
+- [ ] Basic notifications
+- [ ] Priority field
+
+### 🔗 How To Work Together
+
+- [ ] Define DTOs and APIs first
+- [ ] Keep response format consistent: `{ success, data, message }`
+- [ ] You own `Services/`, `Repositories/`, `Middleware/`
+- [ ] Teammate owns `Controllers/`, `DTOs/`, dashboard wiring
+
+### ⚡ Final Execution Plan
+
+- [ ] Week 1: You handle auth, authorization, middleware; teammate handles CRUD and basic APIs
+- [ ] Week 2: You handle transactions, repository, logging; teammate handles pagination and dashboard
+- [ ] Week 3: You handle SignalR and AI; teammate handles deployment and seeding
 
 ---
 
