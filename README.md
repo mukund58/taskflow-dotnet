@@ -92,8 +92,8 @@
 - [x] POST `/tasks`
 - [x] GET `/tasks`
 - [ ] GET `/tasks/:id`
-- [ ] PUT `/tasks/:id`
-- [ ] DELETE `/tasks/:id`
+- [x] PUT `/tasks/:id`
+- [x] DELETE `/tasks/:id`
 - [x] PATCH `/tasks/:id/status`
 - [x] PATCH `/tasks/:id/assign`
 
