@@ -1,7 +1,9 @@
+namespace Backend.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Backend.Models.DTOs;
-using Backend.Services.Interface;
+using Backend.Services.Interfaces;
 
 [ApiController]
 [Route("api/projects")]
@@ -22,7 +24,7 @@ public class ProjectController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ProjectDto dto)
+    public async Task<IActionResult> Create([FromBody] ProjectDto dto)
     {
         return Ok(await _service.Create(dto));
     }

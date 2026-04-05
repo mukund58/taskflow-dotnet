@@ -1,7 +1,6 @@
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using Backend.Data;
-using Backend.Services.Interface;
+using Backend.Services.Interfaces;
 using Backend.Services.Implementations;
 using Backend.Models.DTOs;
 using Backend.Validation;
@@ -32,13 +31,13 @@ builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection(
 builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
 builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
 builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-builder.Services.AddControllers().AddFluentValidation(config =>
-{
-    config.RegisterValidatorsFromAssemblyContaining<Program>();
-});
 
 // JWT Configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -73,18 +72,11 @@ if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Database connection string is missing or empty. Set the CONNECTION_STRING environment variable.");
 }
-// var connectionString = "Host=db;Port=5432;Database=sprintforge;Username=postgres;Password=****";
 
-
-// var connectionString = builder.Configuration["CONNECTION_STRING"];
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
-builder.Services.AddControllers();
-
-// builder.Services.AddDbContext<AppDbContext>(options =>
-//     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();

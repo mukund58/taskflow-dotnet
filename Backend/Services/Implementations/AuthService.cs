@@ -1,11 +1,10 @@
 namespace Backend.Services.Implementations;
 
 using BCrypt.Net;
-using Microsoft.AspNetCore.Mvc;
 using Backend.Models.DTOs;
 using Backend.Data;
 using Backend.Models.Entities;
-using Backend.Services.Interface;
+using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -25,7 +24,10 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto> Register(RegisterDto dto)
     {
-        var existingUser = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
+        var existingUser = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Email == dto.Email);
+
         if (existingUser != null)
         {
             return new AuthResponseDto
@@ -60,7 +62,9 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto> Login(LoginDto dto)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Email == dto.Email);
 
         if (user == null || !BCrypt.Verify(dto.Password, user.PasswordHash))
         {
@@ -97,7 +101,8 @@ public class AuthService : IAuthService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.Name)
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Role, user.Role) // 🔥 IMPORTANT
         };
 
         var token = new JwtSecurityToken(

@@ -7,8 +7,11 @@ public class TaskItem
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 
+
     public string Status { get; set; } = "Todo"; // Todo, InProgress, Done
     public string Priority { get; set; } = "Medium";
+
+    public int CreatedById { get; set; }   //  ownership
 
     public Guid ProjectId { get; set; }
     public Project Project { get; set; }= null!;
@@ -17,4 +20,5 @@ public class TaskItem
     public User? AssignedUser { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; } = false; // soft delete
 }

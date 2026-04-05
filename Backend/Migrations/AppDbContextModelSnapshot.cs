@@ -61,6 +61,9 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
@@ -72,11 +75,16 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedUserId");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.TaskItem, bool>>)(task => !task.IsDeleted));
 
                     b.ToTable("Tasks");
                 });

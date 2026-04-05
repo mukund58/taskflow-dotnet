@@ -1,10 +1,9 @@
 namespace Backend.Services.Implementations;
 
-using Microsoft.AspNetCore.Mvc;
 using Backend.Models.DTOs;
 using Backend.Models.Entities;
 using Backend.Data;
-using Backend.Services.Interface;
+using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 public class ProjectService : IProjectService
@@ -18,7 +17,9 @@ public class ProjectService : IProjectService
 
     public async Task<List<Project>> GetAll()
     {
-        return await _context.Projects.ToListAsync();
+        return await _context.Projects
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<Project> Create(ProjectDto dto)

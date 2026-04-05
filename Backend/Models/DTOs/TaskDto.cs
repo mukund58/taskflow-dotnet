@@ -16,4 +16,13 @@ public class AssignTaskDto
 {
     public Guid UserId { get; set; }
 }
+
+public class UpdateTaskDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Priority { get; set; } = string.Empty;
+    public Guid? AssignedUserId { get; set; }
+}
  

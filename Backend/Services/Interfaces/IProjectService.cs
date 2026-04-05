@@ -1,4 +1,4 @@
-namespace Backend.Services.Interface;
+namespace Backend.Services.Interfaces;
 
 using Backend.Models.DTOs;
 using Backend.Models.Entities;
