@@ -64,32 +64,30 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// JWT Configuration - disabled
-// var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-// var secretKey = jwtSettings["Secret"] ?? "your-secret-key-change-this-in-production";
-// var key = Encoding.ASCII.GetBytes(secretKey);
+// JWT Configuration
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["Secret"] ?? "your-secret-key-change-this-in-production-min-16-chars";
+var key = Encoding.ASCII.GetBytes(secretKey);
 
-// builder.Services.AddAuthentication(options =>
-// {
-//     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-// })
-// .AddJwtBearer(options =>
-// {
-//     options.TokenValidationParameters = new TokenValidationParameters
-//     {
-//         ValidateIssuerSigningKey = true,
-//         IssuerSigningKey = new SymmetricSecurityKey(key),
-//         ValidateIssuer = true,
-//         ValidIssuer = jwtSettings["Issuer"],
-//         ValidateAudience = true,
-//         ValidAudience = jwtSettings["Audience"],
-//         ValidateLifetime = true,
-//         ClockSkew = TimeSpan.Zero
-//     };
-// });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
-// builder.Services.AddAuthorization();
+builder.Services.AddAuthorization();
 
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
@@ -113,7 +111,34 @@ builder.Services.AddScoped<IValidator<UpdateTaskStatusDto>, UpdateTaskStatusDtoV
 builder.Services.AddScoped<IValidator<AssignTaskDto>, AssignTaskDtoValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var securityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "JWT Authentication",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter your JWT token"
+    };
+
+    options.AddSecurityDefinition("Bearer", securityScheme);
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -126,8 +151,8 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseIpRateLimiting();
 
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

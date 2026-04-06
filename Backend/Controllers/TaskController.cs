@@ -65,4 +65,11 @@ public class TaskController : ControllerBase
         return Ok(ApiResponseDto<Backend.Models.Entities.TaskItem>.Ok(task, "Task assigned"));
     }
 
- }
+    [HttpPatch("{id}/priority")]
+    public async Task<IActionResult> UpdatePriority(Guid id, [FromBody] UpdateTaskPriorityDto dto)
+    {
+        var task = await _service.UpdatePriority(id, dto.Priority);
+        return Ok(ApiResponseDto<Backend.Models.Entities.TaskItem>.Ok(task, "Task priority updated"));
+    }
+
+}

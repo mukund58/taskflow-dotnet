@@ -35,4 +35,35 @@ public class ProjectService : IProjectService
 
         return project;
     }
+
+    public async Task<Project?> GetById(Guid id)
+    {
+        return await _context.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
+    public async Task<Project?> Update(Guid id, ProjectDto dto)
+    {
+        var project = await _context.Projects.FindAsync(id);
+        if (project == null)
+            return null;
+
+        project.Name = dto.Name;
+        project.Description = dto.Description;
+
+        await _context.SaveChangesAsync();
+        return project;
+    }
+
+    public async Task<bool> Delete(Guid id)
+    {
+        var project = await _context.Projects.FindAsync(id);
+        if (project == null)
+            return false;
+
+        _context.Projects.Remove(project);
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

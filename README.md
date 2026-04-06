@@ -22,8 +22,8 @@
   - [x] Todo
   - [x] In Progress
   - [x] Done
-- [ ] Priority:
-  - [ ] Low / Medium / High
+- [x] Priority:
+  - [x] Low / Medium / High
 - [x] Filter:
   - [x] By status
   - [x] By assigned user
@@ -82,10 +82,10 @@
 ### Project
 
 - [x] GET `/project`
-- [ ] GET `/project/:id`
+- [x] GET `/project/:id`
 - [x] POST `/project`
-- [ ] PUT `/project/:id`
-- [ ] DELETE `/project/:id`
+- [x] PUT `/project/:id`
+- [x] DELETE `/project/:id`
 
 ### Tasks
 
@@ -125,8 +125,8 @@
   - [ ] Resource ownership
 - [x] Validation (FluentValidation)
 - [ ] Logging (Serilog or basic)
-- [X] CORS
-- [X] Exception middleware
+- [x] CORS
+- [x] Exception middleware
 
 ### ⚡ SHOULD HAVE
 

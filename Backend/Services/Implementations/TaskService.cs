@@ -22,7 +22,8 @@ public class TaskService : ITaskService
             Title = dto.Title,
             Description = dto.Description,
             ProjectId = dto.ProjectId,
-            DueDate = dto.DueDate
+            DueDate = dto.DueDate,
+            Priority = dto.Priority
         };
 
         _context.Tasks.Add(task);
@@ -91,6 +92,17 @@ public class TaskService : ITaskService
         var task = await GetTaskByIdOrThrowAsync(taskId);
 
         task.AssignedUserId = userId;
+
+        await _context.SaveChangesAsync();
+
+        return task;
+    }
+
+    public async Task<TaskItem> UpdatePriority(Guid taskId, string priority)
+    {
+        var task = await GetTaskByIdOrThrowAsync(taskId);
+
+        task.Priority = priority;
 
         await _context.SaveChangesAsync();
 
