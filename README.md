@@ -37,6 +37,10 @@
 - [ ] Add comment to task
 - [ ] Get task comments
 
+- [x] Count tasks per user
+- [x] Active tasks
+- [x] Completed tasks
+- [x] Overdue tasks (optional but impressive)
 ### ✅ Activity Log (VERY IMPORTANT)
 
 - [ ] Track:
@@ -98,7 +102,8 @@ Assign user with least tasks
 
 ## 🏷️ Labels
 
-- [ ] Tag tasks
+- [x] GET `/users`
+- [x] GET `/users/:id`
 
 ---
 
@@ -106,6 +111,13 @@ Assign user with least tasks
 
 ## ✅ Required
 
+- [x] POST `/tasks`
+- [x] GET `/tasks`
+- [x] GET `/tasks/:id`
+- [x] PUT `/tasks/:id`
+- [x] DELETE `/tasks/:id`
+- [x] PATCH `/tasks/:id/status`
+- [x] PATCH `/tasks/:id/assign`
 - [x] JWT auth
 - [x] Authorization (roles + ownership)
 - [x] Validation
@@ -130,6 +142,14 @@ Assign user with least tasks
 
 Add:
 
+- [x] Authentication (JWT)
+- [ ] Authorization (roles + ownership)
+  - [ ] Role-based access
+  - [ ] Resource ownership
+- [x] Validation (FluentValidation)
+- [ ] Logging (Serilog or basic)
+- [X] CORS
+- [X] Exception middleware
 ```text
 GET    /tasks/:id
 GET    /tasks?status=&assignedTo=&page=
@@ -142,6 +162,11 @@ GET    /activity
 
 # ⚔️ Team Split (FIXED)
 
+- [ ] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
+- [ ] Seeding (test data)
+- [ ] API versioning (`/api/v1`)
+- [x] Rate limiting
+- [x] Soft delete
 ## 🧠 YOU (CORE / HARD)
 
 - Auth + JWT
@@ -166,14 +191,51 @@ GET    /activity
 
 If you complete:
 
-✅ Auth
-✅ Task system
-✅ Comments
-✅ Activity log
-✅ Dashboard
-✅ Docker
+- [ ] Authorization (roles + ownership)
+  - [ ] Role-based access
+  - [ ] Resource ownership
+- [ ] Refresh token system
+- [x] Exception middleware (global)
+  - [x] Standard API response format
+- [ ] Transactions
+- [ ] Concurrency (RowVersion)
+- [ ] Indexing (DB performance)
+  - [ ] Task.Status
+  - [ ] Task.AssignedUserId
+  - [ ] Task.ProjectId
+- [x] Soft delete
+- [ ] AI assignment (full logic)
+  - [ ] Fallback logic
+  - [ ] Deterministic API shape
+- [ ] SignalR integration
+- [ ] Activity log system
+- [ ] Logging (Serilog)
+- [ ] Testing (xUnit)
 
----
+### 🧑‍💻 Teammate (Easy / Safe / Visible)
+
+- [x] Update task
+- [x] Delete task
+- [ ] GET `/tasks/:id`
+- [ ] GET `/users`
+- [ ] GET `/users/:id`
+- [x] Tasks per user
+- [x] Pending vs completed
+- [x] Total counts
+- [x] Workload distribution
+- [x] GET `/dashboard`
+- [x] Count tasks per user
+- [x] Active tasks
+- [x] Completed tasks
+- [x] Overdue tasks
+- [ ] Pagination
+- [ ] Combine filtering + pagination
+- [ ] Backend → Render
+- [ ] DB → PostgreSQL
+- [ ] Basic env setup
+- [ ] Seeding (5 users / 20 tasks / 2 projects)
+- [ ] Basic notifications
+- [ ] Priority field
 
 👉 You already beat **80–90% students**
 
