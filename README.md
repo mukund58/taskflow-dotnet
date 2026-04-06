@@ -1,304 +1,290 @@
-## Corporate Application Checklist (v1)
+## 🎯 CORE (MUST COMPLETE)
 
-### 1) Core Product Scope
-
-#### Identity and Access
+## 🔐 Auth & Security
 
 - [x] Register / Login
 - [x] JWT authentication
-- [ ] Refresh token with rotation and revocation
-- [ ] Role-based access control (RBAC)
-  - [ ] Super Admin
-  - [ ] Admin
-  - [ ] Manager
-  - [ ] User
-  - [ ] Viewer
-- [ ] Permission matrix per endpoint/action
+- [ ] Role-based access (RBAC)
+  - [ ] Admin / Manager / User
+- [ ] Ownership check (user can access only their tasks)
 - [x] Password hashing (BCrypt)
-- [ ] Password policy and account lockout
-- [ ] SSO (OIDC/SAML) integration
-- [ ] MFA for privileged roles
+- [ ] Refresh token *(optional but strong)*
 
-#### Task and Project Operations
+---
+
+## 📋 Task + Project System (MAIN CORE)
 
 - [x] Create task
 - [x] Assign user
 - [x] Update task
-- [x] Delete task (soft delete)
-- [x] Status workflow
-  - [x] Todo
-  - [x] In Progress
-  - [x] Done
-- [ ] Priority policy
-  - [ ] Low / Medium / High
-- [x] Filtering
-  - [x] By status
-  - [x] By assigned user
-- [ ] Pagination and sorting
-- [ ] Due dates and SLA breach rules
-- [ ] Bulk actions (bulk assign, bulk status update)
+- [x] Soft delete task
+- [x] Status workflow:
+  - Todo / In Progress / Done / add Custom status
 
-#### Analytics and Reporting
+### 🔥 ADD THIS (VERY IMPORTANT)
 
-- [x] Count tasks per user
-- [x] Active tasks
-- [x] Completed tasks
-- [x] Overdue tasks (optional but impressive)
-- [ ] Workload by user/team
-- [ ] Pending vs completed trends
-- [ ] Overdue task analytics
-- [ ] Executive dashboard endpoint
+- [ ] Priority (Low / Medium / High)
+- [ ] Due date
+- [ ] Pagination (`?page=1&pageSize=10`)
+- [ ] Sorting (`?sortBy=createdAt`)
 
-#### AI Capability
+---
+
+## 🧩 REAL JIRA FEATURES (YOU WERE MISSING)
+
+### ✅ Comments System
+
+- [ ] Add comment to task
+- [ ] Get task comments
+
+### ✅ Activity Log (VERY IMPORTANT)
+
+- [ ] Track:
+  - task created
+  - assigned
+  - status changed
+
+### ✅ Checklist / Subtasks (🔥 HIGH VALUE)
+
+- [ ] Task checklist items
+- [ ] Mark complete/incomplete
+
+---
+
+## 👥 Workload & Dashboard
 
 - [x] Tasks per user
-- [x] Pending vs completed
-- [x] Workload distribution
-- [x] Total tasks
-- [x] Total users
+- [x] Active tasks
+- [x] Completed tasks
 
-### 🤖 AI Feature — Smart Assignment
+### Improve:
+
+- [ ] Overdue tasks
+- [ ] Total tasks / users
+- [ ] Workload distribution
+
+---
+
+## 🤖 AI Feature (KEEP SIMPLE)
 
 - [ ] Suggest best user
 - [ ] Suggest priority
-- [ ] Deterministic input/output contract
-- [ ] Explainable output reason
-- [ ] Fallback logic when AI fails
+- [ ] Return explanation
+
+### 🔥 Add fallback:
+
+Assign user with least tasks
 
 ---
 
-## 2) Corporate API Baseline
+## 🌐 Deployment
 
-### Auth
-
-- [x] POST `/auth/register`
-- [x] POST `/auth/login`
-- [ ] POST `/auth/refresh`
-- [ ] POST `/auth/logout`
-- [ ] GET `/auth/me`
-
-### Users
-
-- [ ] GET `/users`
-- [ ] GET `/users/:id`
-- [ ] GET `/users/:id/workload`
-
-### Projects
-
-- [x] GET `/project`
-- [ ] GET `/project/:id`
-- [x] POST `/project`
-- [ ] PUT `/project/:id`
-- [ ] DELETE `/project/:id`
-
-### Tasks
-
-- [x] POST `/tasks`
-- [x] GET `/tasks`
-- [x] GET `/tasks/:id`
-- [x] PUT `/tasks/:id`
-- [x] DELETE `/tasks/:id`
-- [x] PATCH `/tasks/:id/status`
-- [x] PATCH `/tasks/:id/assign`
-
-### Dashboard and Admin
-
-- [x] GET `/dashboard`
-
-### AI
-
-- [ ] POST `/ai/suggest-assignment`
-
-### Dashboard
-
-- [ ] GET `/dashboard`
-- [ ] GET `/audit-logs`
-- [ ] POST `/ai/suggest-assignment`
+- [x] Docker (API + DB)
+- [ ] Deploy backend (Render)
+- [ ] PostgreSQL (cloud)
 
 ---
 
-## 3) Backend Production Checklist
+# ⚡ PHASE 2 (IF TIME)
 
-### Security and Compliance (Must)
+## 🔔 Notifications
 
-- [x] Authentication (JWT)
+- [ ] Notify on assignment
+- [ ] Notify on comment
+
+## 🔍 Search
+
+- [ ] Search tasks by title
+
+## 🏷️ Labels
+
+- [ ] Tag tasks
+
+---
+
+# 🧠 Backend Must-Haves (KEEP CLEAN)
+
+## ✅ Required
+
+- [x] JWT auth
 - [ ] Authorization (roles + ownership)
-  - [ ] Role-based access
-  - [ ] Resource ownership
-- [x] Validation (FluentValidation)
-- [ ] Logging (Serilog or basic)
-- [X] CORS
-- [X] Exception middleware
-- [x] Global exception middleware
-- [x] Standard API response format
-- [x] CORS policy
-- [ ] Secrets management strategy
-- [ ] Data encryption at rest and in transit
-- [ ] Audit logs for auth and data changes
-- [ ] Data retention and deletion policy
-- [ ] Security scanning (SAST/dependency)
+- [x] Validation
+- [x] Exception middleware
+- [x] CORS
+- [ ] Logging (basic is enough)
 
-### Reliability and Performance
+## ⚡ Important
 
-- [ ] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
-- [ ] Seeding (test data)
-- [ ] API versioning (`/api/v1`)
-- [x] Rate limiting
-- [x] Soft delete
+- [ ] Pagination + filtering
+- [ ] API versioning `/api/v1`
+- [ ] Seeding
 
-### 🔥 BONUS
+## 🔥 Bonus
 
-- [ ] Caching (Redis)
+- [ ] Redis caching
+- [ ] Rate limiting
 
 ---
 
-## ⚔️ Team Split Strategy
+# 🧠 API FIXES (YOU MISSED)
 
-### 🧠 You (Lead / Core / Hard)
+Add:
 
-- [ ] Authorization (roles + ownership)
-  - [ ] Role-based access
-  - [ ] Resource ownership
-- [ ] Refresh token system
-- [x] Exception middleware (global)
-  - [x] Standard API response format
-- [ ] Transactions
-- [ ] Concurrency (RowVersion)
-- [ ] Indexing (DB performance)
-  - [ ] Task.Status
-  - [ ] Task.AssignedUserId
-  - [ ] Task.ProjectId
-- [x] Soft delete
-- [ ] AI assignment (full logic)
-  - [ ] Fallback logic
-  - [ ] Deterministic API shape
-- [ ] SignalR integration
-- [ ] Activity log system
-- [ ] Logging (Serilog)
-- [ ] Testing (xUnit)
-- [x] Rate limiting
-- [x] Soft delete
-- [ ] Pagination + filtering + sorting (`?status=todo&assignedTo=5&page=1&pageSize=10&sortBy=createdAt&sortDir=desc`)
-- [ ] Caching (Redis)
-- [ ] Backup and restore drill
-
-### Observability and Operations
-
-- [x] Update task
-- [x] Delete task
-- [ ] GET `/tasks/:id`
-- [ ] GET `/users`
-- [ ] GET `/users/:id`
-- [x] Tasks per user
-- [x] Pending vs completed
-- [x] Total counts
-- [x] Workload distribution
-- [x] GET `/dashboard`
-- [x] Count tasks per user
-- [x] Active tasks
-- [x] Completed tasks
-- [x] Overdue tasks
-- [ ] Pagination
-- [ ] Combine filtering + pagination
-- [ ] Backend → Render
-- [ ] DB → PostgreSQL
-- [ ] Basic env setup
-- [ ] Seeding (5 users / 20 tasks / 2 projects)
-- [ ] Basic notifications
-- [ ] Priority field
-- [ ] Structured logging (Serilog)
-- [ ] Correlation ID middleware
-- [ ] Centralized log sink
-- [ ] Health checks (liveness/readiness)
-- [ ] Metrics and dashboard (latency/error rate)
-- [ ] Alerting and on-call rules
-
-### Delivery and Governance
-
-- [ ] API versioning (`/api/v1`)
-- [ ] Seeding strategy for non-production
-- [ ] Unit tests (xUnit)
-- [ ] Integration tests
-- [ ] CI/CD with quality gates
-- [ ] Environment promotion (dev/staging/prod)
-- [ ] Rollback strategy
+```text
+GET    /tasks/:id
+GET    /tasks?status=&assignedTo=&page=
+POST   /tasks/:id/comments
+GET    /tasks/:id/comments
+GET    /activity
+```
 
 ---
 
-## 4) Team Delivery Plan (Corporate)
+# ⚔️ Team Split (FIXED)
 
-### Lead Ownership (Platform/Security)
+## 🧠 YOU (CORE / HARD)
 
-- [ ] Authorization and RBAC
-- [ ] Token lifecycle (refresh/revoke)
-- [x] Exception middleware + response standard
-- [ ] Transactions + concurrency
-- [ ] Logging + observability stack
-- [ ] Security/compliance controls
+- Auth + JWT
+- RBAC + ownership
+- Activity log
+- AI logic
+- Pagination + filtering
+- Docker + infra
 
-### Teammate Ownership (Feature/API)
+## 👤 TEAMMATE
 
-- [ ] Users endpoints
-- [ ] Task details endpoint
-- [ ] Dashboard endpoint
-- [ ] Pagination/filter/sort wiring
-- [ ] Workload analytics endpoints
-- [ ] Seed data for dev/test
-
-### Working Agreement
-
-- [ ] API contracts first (DTO and swagger)
-- [ ] Consistent response shape: `{ success, data, message, errors }`
-- [ ] Shared code review checklist
-- [ ] Definition of done includes tests and docs
+- Project APIs
+- Comments
+- Dashboard
+- User APIs
+- Seeding
+- Swagger / Postman
 
 ---
 
-## 5) Architecture Snapshot
+# 🧠 Final Reality Check
 
-- [ ] Frontend (React)
-- [x] Backend (.NET API)
-- [x] PostgreSQL
-- [ ] Redis cache
-- [ ] AI provider integration
+If you complete:
+
+✅ Auth
+✅ Task system
+✅ Comments
+✅ Activity log
+✅ Dashboard
+✅ Docker
 
 ---
 
-## 📊 Class Diagram
+👉 You already beat **80–90% students**
 
-```mermaid
-classDiagram
-    class User {
-        +int Id
-        +string Username
-        +string Email
-        +string PasswordHash
-        +string Role
-        +Register()
-        +Login()
-    }
-    
-    class Project {
-        +int Id
-        +string Name
-        +string Description
-        +int OwnerId
-        +CreateProject()
-    }
-    
-    class Task {
-        +int Id
-        +string Title
-        +string Description
-        +string Status
-        +string Priority
-        +int ProjectId
-        +int AssignedUserId
-        +UpdateStatus()
-        +AssignUser()
-    }
-    
-    User "1" -- "*" Project : Owns
-    User "1" -- "*" Task : Assigned To
-    Project "1" -- "*" Task : Contains
-  ```
+---
+
+# 🔥 What Makes Your Project “Stand Out”
+
+These 3:
+
+1. Activity log
+2. Checklist/subtasks
+3. AI suggestion
+
+---
+
+# ✅ Recommended Next Features
+
+## 1) Task Checklists / Subtasks
+
+- [ ] Add `ChecklistItem` entity linked to `TaskItem`
+- [ ] Add checklist CRUD endpoints
+- [ ] Mark checklist items complete/incomplete
+- [ ] Keep checklist order
+- [ ] Show task `% complete` rollup
+
+## 2) Comments / Activity Feed / Audit Log
+
+- [ ] Add comments per task
+- [ ] Get task comments
+- [ ] Track activity history for task changes
+- [ ] Store audit logs for admin/compliance
+
+## 3) RBAC + Permissions per Endpoint
+
+- [ ] Add roles: Admin / Manager / User / Viewer
+- [ ] Add permission matrix per endpoint/action
+- [ ] Add project-level access control
+- [ ] Use `[Authorize(Roles=...)]` where needed
+
+## 4) Pagination + Sorting + Search
+
+- [ ] Add paging to `GET /tasks`
+- [ ] Add sorting by due date, priority, and created date
+- [ ] Add search by title and description
+- [ ] Keep filtering + pagination together
+
+## 5) More Workflow Depth
+
+- [ ] Add custom workflows per project
+- [ ] Add validation rules for task transitions
+- [ ] Add extra statuses like Blocked / In Review / QA
+
+## 6) Labels, Attachments, Watchers, Notifications
+
+- [ ] Add labels/tags
+- [ ] Add file attachments
+- [ ] Add watchers / @mentions
+- [ ] Add email / Slack / Teams notifications
+
+## 7) Bulk Actions
+
+- [ ] Bulk assign tasks
+- [ ] Bulk change status
+- [ ] Bulk close tasks
+
+## 8) Ownership + Multi-Tenancy
+
+- [ ] Add CreatedBy / UpdatedBy metadata
+- [ ] Add organization / tenant boundaries if needed
+- [ ] Enforce ownership and visibility rules
+
+---
+
+# 🐳 Run With Docker
+
+This project uses Docker Compose from the Backend folder. It starts the API and a PostgreSQL container together.
+
+### 1. Go to the backend folder
+
+```bash
+cd Backend
+```
+
+### 2. Make sure `.env` exists
+
+The backend expects these values in `Backend/.env`:
+
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `CONNECTION_STRING`
+
+### 3. Start the containers
+
+```bash
+docker compose up --build
+```
+
+### 4. Open the API
+
+- API: `http://localhost:5000`
+- Swagger: `http://localhost:5000/swagger`
+
+### 5. Stop the containers
+
+```bash
+docker compose down
+```
+
+If you want to remove the database volume too:
+
+```bash
+docker compose down -v
+```
