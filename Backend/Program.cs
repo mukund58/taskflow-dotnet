@@ -11,6 +11,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using AspNetCoreRateLimit;
 
@@ -64,32 +65,49 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// JWT Configuration - disabled
-// var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-// var secretKey = jwtSettings["Secret"] ?? "your-secret-key-change-this-in-production";
-// var key = Encoding.ASCII.GetBytes(secretKey);
+// JWT Configuration
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["Secret"]
+    ?? Environment.GetEnvironmentVariable("JWT_KEY")
+    ?? "your-secret-key-change-this-in-production";
+var issuer = jwtSettings["Issuer"] ?? "YourAppName";
+var audience = jwtSettings["Audience"] ?? "YourAppUsers";
+var key = Encoding.ASCII.GetBytes(secretKey);
 
-// builder.Services.AddAuthentication(options =>
-// {
-//     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-// })
-// .AddJwtBearer(options =>
-// {
-//     options.TokenValidationParameters = new TokenValidationParameters
-//     {
-//         ValidateIssuerSigningKey = true,
-//         IssuerSigningKey = new SymmetricSecurityKey(key),
-//         ValidateIssuer = true,
-//         ValidIssuer = jwtSettings["Issuer"],
-//         ValidateAudience = true,
-//         ValidAudience = jwtSettings["Audience"],
-//         ValidateLifetime = true,
-//         ClockSkew = TimeSpan.Zero
-//     };
-// });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = issuer,
+        ValidateAudience = true,
+        ValidAudience = audience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
-// builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("TaskRead", policy =>
+        policy.RequireRole("Admin", "Manager", "User", "Viewer"));
+
+    options.AddPolicy("TaskWrite", policy =>
+        policy.RequireRole("Admin", "Manager", "User"));
+
+    options.AddPolicy("ProjectRead", policy =>
+        policy.RequireRole("Admin", "Manager", "User", "Viewer"));
+
+    options.AddPolicy("ProjectWrite", policy =>
+        policy.RequireRole("Admin", "Manager", "User"));
+});
 
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
@@ -113,7 +131,39 @@ builder.Services.AddScoped<IValidator<UpdateTaskStatusDto>, UpdateTaskStatusDtoV
 builder.Services.AddScoped<IValidator<AssignTaskDto>, AssignTaskDtoValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "GDG Hackathon API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter only your JWT token. Example: eyJhbGciOiJIUzI1NiIs..."
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -126,8 +176,8 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseIpRateLimiting();
 
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
@@ -137,8 +187,15 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        db.Database.Migrate();
-        Console.WriteLine("✅ Database migrated successfully");
+        if (DatabaseHasExistingSchema(db))
+        {
+            Console.WriteLine("⚠️ Database schema already exists, skipping initial migration");
+        }
+        else
+        {
+            db.Database.Migrate();
+            Console.WriteLine("✅ Database migrated successfully");
+        }
     }
     catch (Exception ex)
     {
@@ -146,4 +203,22 @@ using (var scope = app.Services.CreateScope())
         throw; // Re-throw to fail fast in container
     }
 }
+
+static bool DatabaseHasExistingSchema(AppDbContext db)
+{
+    db.Database.OpenConnection();
+
+    try
+    {
+        using var command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Projects')";
+        var result = command.ExecuteScalar();
+        return result is bool exists && exists;
+    }
+    finally
+    {
+        db.Database.CloseConnection();
+    }
+}
+
 app.Run();

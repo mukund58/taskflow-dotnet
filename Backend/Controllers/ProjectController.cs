@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/projects")]
-// [Authorize]
+[Authorize]
 public class ProjectController : ControllerBase
 {
     private readonly IProjectService _service;
@@ -18,6 +19,7 @@ public class ProjectController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "ProjectRead")]
     public async Task<IActionResult> GetAll()
     {
         var projects = await _service.GetAll();
@@ -25,9 +27,15 @@ public class ProjectController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "ProjectWrite")]
     public async Task<IActionResult> Create([FromBody] ProjectDto dto)
     {
-        var project = await _service.Create(dto);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(userIdClaim, out var creatorUserId))
+            throw new UnauthorizedAccessException("Invalid user context");
+
+        var project = await _service.Create(dto, creatorUserId);
         return Ok(ApiResponseDto<Backend.Models.Entities.Project>.Ok(project, "Project created"));
     }
 }

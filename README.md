@@ -4,9 +4,9 @@
 
 - [x] Register / Login
 - [x] JWT authentication
-- [ ] Role-based access (RBAC)
-  - [ ] Admin / Manager / User
-- [ ] Ownership check (user can access only their tasks)
+- [x] Role-based access (RBAC)
+  - [x] Admin / Manager / User
+- [x] Ownership check (user can access only their tasks)
 - [x] Password hashing (BCrypt)
 - [ ] Refresh token *(optional but strong)*
 
@@ -119,7 +119,7 @@ Assign user with least tasks
 - [x] PATCH `/tasks/:id/status`
 - [x] PATCH `/tasks/:id/assign`
 - [x] JWT auth
-- [ ] Authorization (roles + ownership)
+- [x] Authorization (roles + ownership)
 - [x] Validation
 - [x] Exception middleware
 - [x] CORS
@@ -270,10 +270,10 @@ These 3:
 
 ## 3) RBAC + Permissions per Endpoint
 
-- [ ] Add roles: Admin / Manager / User / Viewer
-- [ ] Add permission matrix per endpoint/action
+- [x] Add roles: Admin / Manager / User / Viewer
+- [x] Add permission matrix per endpoint/action
 - [ ] Add project-level access control
-- [ ] Use `[Authorize(Roles=...)]` where needed
+- [x] Use `[Authorize(Roles=...)]` where needed
 
 ## 4) Pagination + Sorting + Search
 

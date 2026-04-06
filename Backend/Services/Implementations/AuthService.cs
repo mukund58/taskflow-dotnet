@@ -94,7 +94,13 @@ public class AuthService : IAuthService
     private string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"] ?? "your-secret-key-change-this-in-production"));
+        var secret = jwtSettings["Secret"]
+            ?? Environment.GetEnvironmentVariable("JWT_KEY")
+            ?? "your-secret-key-change-this-in-production";
+        var issuer = jwtSettings["Issuer"] ?? "YourAppName";
+        var audience = jwtSettings["Audience"] ?? "YourAppUsers";
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -106,8 +112,8 @@ public class AuthService : IAuthService
         };
 
         var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
             expires: DateTime.UtcNow.AddHours(int.Parse(jwtSettings["ExpirationHours"] ?? "24")),
             signingCredentials: credentials
