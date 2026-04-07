@@ -47,6 +47,63 @@ public class TaskService : ITaskService
         return await query.ToListAsync();
     }
 
+    public async Task<PaginatedResponseDto<TaskItem>> GetAllPaginatedAsync(TaskQueryDto query)
+    {
+        var taskQuery = _context.Tasks
+            .AsNoTracking()
+            .AsQueryable();
+
+        // Apply filters
+        if (!string.IsNullOrEmpty(query.Status))
+            taskQuery = taskQuery.Where(x => x.Status == query.Status);
+
+        if (query.AssignedTo.HasValue)
+            taskQuery = taskQuery.Where(x => x.AssignedUserId == query.AssignedTo);
+
+        // Apply sorting
+        taskQuery = query.SortBy?.ToLower() switch
+        {
+            "duedate" => query.SortDescending
+                ? taskQuery.OrderByDescending(x => x.DueDate)
+                : taskQuery.OrderBy(x => x.DueDate),
+            "priority" => query.SortDescending
+                ? taskQuery.OrderByDescending(x => x.Priority)
+                : taskQuery.OrderBy(x => x.Priority),
+            "title" => query.SortDescending
+                ? taskQuery.OrderByDescending(x => x.Title)
+                : taskQuery.OrderBy(x => x.Title),
+            "status" => query.SortDescending
+                ? taskQuery.OrderByDescending(x => x.Status)
+                : taskQuery.OrderBy(x => x.Status),
+            _ => query.SortDescending
+                ? taskQuery.OrderByDescending(x => x.CreatedAt)
+                : taskQuery.OrderBy(x => x.CreatedAt),
+        };
+
+        var total = await taskQuery.CountAsync();
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Max(1, Math.Min(query.PageSize, 100)); // Max 100 per page
+        var skip = (page - 1) * pageSize;
+
+        var items = await taskQuery
+            .Skip(skip)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+
+        return new PaginatedResponseDto<TaskItem>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            Total = total,
+            TotalPages = totalPages,
+            HasNextPage = page < totalPages,
+            HasPreviousPage = page > 1
+        };
+    }
+
     public async Task<TaskItem> GetById(Guid taskId)
     {
         return await GetTaskByIdOrThrowAsync(taskId);

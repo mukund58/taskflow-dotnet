@@ -29,11 +29,33 @@ public class TaskController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "TaskRead")]
-    public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] Guid? assignedTo)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? status = null,
+        [FromQuery] Guid? assignedTo = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false)
     {
         assignedTo = EnforceOwnershipFilter(assignedTo);
-        var tasks = await _service.GetAll(status, assignedTo);
-        return Ok(ApiResponseDto<List<Backend.Models.Entities.TaskItem>>.Ok(tasks, "Tasks retrieved"));
+
+        var query = new TaskQueryDto
+        {
+            Page = page,
+            PageSize = pageSize,
+            Status = status,
+            AssignedTo = assignedTo,
+            SortBy = sortBy,
+            SortDescending = sortDescending
+        };
+
+        var result = await _service.GetAllPaginatedAsync(query);
+        return Ok(new ApiResponseDto<PaginatedResponseDto<Backend.Models.Entities.TaskItem>>
+        {
+            Success = true,
+            Data = result,
+            Message = "Tasks retrieved"
+        });
     }
 
     [HttpPut("{id}")]

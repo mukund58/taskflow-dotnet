@@ -33,11 +33,11 @@
 
 ### 🔥 ADD THIS (VERY IMPORTANT)
 
-- [ ] Priority (Low / Medium / High)
-- [ ] Due date
+- [x] Priority (Low / Medium / High)
+- [x] Due date
 
-- [ ] Pagination (`?page=1&pageSize=10`)
-- [ ] Sorting (`?sortBy=createdAt`)
+- [x] Pagination (`?page=1&pageSize=10`)
+- [x] Sorting (`?sortBy=createdAt`)
 
 ---
 
@@ -191,7 +191,7 @@ Add:
 
 ```text
 GET    /tasks/:id
-GET    /tasks?status=&assignedTo=&page=
+GET    /tasks?status=&assignedTo=&page=&pageSize=&sortBy=
 POST   /tasks/:id/comments
 GET    /tasks/:id/comments
 GET    /activity
@@ -201,7 +201,7 @@ GET    /activity
 
 # ⚔️ Team Split (FIXED)
 
-- [ ] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
+- [x] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
 - [ ] Seeding (test data)
 - [ ] API versioning (`/api/v1`)
 - [x] Rate limiting
@@ -268,14 +268,14 @@ If you complete:
 - [x] Active tasks
 - [x] Completed tasks
 - [x] Overdue tasks
-- [ ] Pagination
-- [ ] Combine filtering + pagination
+- [x] Pagination
+- [x] Combine filtering + pagination
 - [ ] Backend → Render
 - [ ] DB → PostgreSQL
 - [ ] Basic env setup
 - [ ] Seeding (5 users / 20 tasks / 2 projects)
 - [ ] Basic notifications
-- [ ] Priority field
+- [x] Priority field
 
 👉 You already beat **80–90% students**
 
@@ -317,8 +317,8 @@ These 3:
 
 ## 4) Pagination + Sorting + Search
 
-- [ ] Add paging to `GET /tasks`
-- [ ] Add sorting by due date, priority, and created date
+- [x] Add paging to `GET /tasks`
+- [x] Add sorting by due date, priority, and created date
 - [ ] Add search by title and description
 - [ ] Keep filtering + pagination together
 
