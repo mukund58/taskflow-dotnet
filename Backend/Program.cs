@@ -67,11 +67,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // JWT Configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["Secret"]
-    ?? Environment.GetEnvironmentVariable("JWT_KEY")
-    ?? "your-secret-key-change-this-in-production";
-var issuer = jwtSettings["Issuer"] ?? "YourAppName";
-var audience = jwtSettings["Audience"] ?? "YourAppUsers";
+var secretKey = jwtSettings["Secret"] ?? "your-secret-key-change-this-in-production-min-16-chars";
 var key = Encoding.ASCII.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(options =>
@@ -85,10 +81,8 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidIssuer = issuer,
-        ValidateAudience = true,
-        ValidAudience = audience,
+        ValidateIssuer = false,
+        ValidateAudience = false,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
@@ -133,34 +127,29 @@ builder.Services.AddScoped<IValidator<AssignTaskDto>, AssignTaskDtoValidator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    var securityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Title = "GDG Hackathon API",
-        Version = "v1"
-    });
-
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
+        Name = "JWT Authentication",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter only your JWT token. Example: eyJhbGciOiJIUzI1NiIs..."
-    });
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter your JWT token"
+    };
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityDefinition("Bearer", securityScheme);
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
                 {
-                    Type = ReferenceType.SecurityScheme,
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
-            Array.Empty<string>()
+            new string[] { }
         }
     });
 });
