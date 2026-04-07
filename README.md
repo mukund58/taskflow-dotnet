@@ -8,7 +8,7 @@
   - [x] Admin / Manager / User
 - [x] Ownership check (user can access only their tasks)
 - [x] Password hashing (BCrypt)
-- [ ] Refresh token *(optional but strong)*
+- [ ] Refresh token _(optional but strong)_
 
 ---
 
@@ -45,13 +45,14 @@
 
 ### ✅ Comments System
 
-- [ ] Add comment to task
-- [ ] Get task comments
+- [x] Add comment to task
+- [x] Get task comments
 
 - [x] Count tasks per user
 - [x] Active tasks
 - [x] Completed tasks
 - [x] Overdue tasks (optional but impressive)
+
 ### ✅ Activity Log (VERY IMPORTANT)
 
 - [ ] Track:
@@ -72,6 +73,7 @@
 - [x] Workload distribution
 - [x] Total tasks
 - [x] Total users
+
 ---
 
 ## 👥 Workload & Dashboard
@@ -131,6 +133,7 @@ Assign user with least tasks
 - [x] POST `/project`
 - [x] PUT `/project/:id`
 - [x] DELETE `/project/:id`
+
 ---
 
 # 🧠 Backend Must-Haves (KEEP CLEAN)
@@ -183,8 +186,9 @@ Add:
   - [ ] Resource ownership
 - [x] Validation (FluentValidation)
 - [ ] Logging (Serilog or basic)
-- [X] CORS
-- [X] Exception middleware
+- [x] CORS
+- [x] Exception middleware
+
 ```text
 GET    /tasks/:id
 GET    /tasks?status=&assignedTo=&page=
@@ -202,6 +206,7 @@ GET    /activity
 - [ ] API versioning (`/api/v1`)
 - [x] Rate limiting
 - [x] Soft delete
+
 ## 🧠 YOU (CORE / HARD)
 
 - Auth + JWT

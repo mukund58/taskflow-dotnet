@@ -115,5 +115,26 @@ public class UpdateChecklistItemCompletionDtoValidator : AbstractValidator<Updat
         RuleFor(x => x)
             .NotNull()
             .WithMessage("Request body is required");
+public class CreateCommentDtoValidator : AbstractValidator<CreateCommentDto>
+{
+    public CreateCommentDtoValidator()
+    {
+        RuleFor(x => x.Content)
+            .NotEmpty()
+            .WithMessage("Comment content is required")
+            .MaximumLength(1000)
+            .WithMessage("Comment must not exceed 1000 characters");
+    }
+}
+
+public class UpdateCommentDtoValidator : AbstractValidator<UpdateCommentDto>
+{
+    public UpdateCommentDtoValidator()
+    {
+        RuleFor(x => x.Content)
+            .NotEmpty()
+            .WithMessage("Comment content is required")
+            .MaximumLength(1000)
+            .WithMessage("Comment must not exceed 1000 characters");
     }
 }

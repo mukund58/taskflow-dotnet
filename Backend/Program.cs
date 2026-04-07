@@ -120,6 +120,7 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IValidator<CreateTaskDto>, CreateTaskDtoValidator>();
 builder.Services.AddScoped<IValidator<UpdateTaskStatusDto>, UpdateTaskStatusDtoValidator>();
 builder.Services.AddScoped<IValidator<AssignTaskDto>, AssignTaskDtoValidator>();
