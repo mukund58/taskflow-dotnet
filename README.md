@@ -84,9 +84,9 @@
 
 ### Improve:
 
-- [ ] Overdue tasks
-- [ ] Total tasks / users
-- [ ] Workload distribution
+- [x] Overdue tasks
+- [x] Total tasks / users
+- [x] Workload distribution
 
 ---
 
@@ -164,8 +164,8 @@ Assign user with least tasks
 
 ### Dashboard
 
-- [ ] GET `/dashboard`
-- [ ] Pagination + filtering
+- [x] GET `/dashboard`
+- [x] Pagination + filtering
 - [ ] API versioning `/api/v1`
 - [ ] Seeding
 
@@ -299,7 +299,7 @@ These 3:
 - [x] Add checklist CRUD endpoints
 - [x] Mark checklist items complete/incomplete
 - [x] Keep checklist order
-- [ ] Show task `% complete` rollup
+- [x] Show task `% complete` rollup
 
 ## 2) Comments / Activity Feed / Audit Log
 
