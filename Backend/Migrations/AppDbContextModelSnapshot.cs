@@ -22,6 +22,38 @@ namespace Backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Backend.Models.Entities.ChecklistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TaskItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskItemId", "Position");
+
+                    b.ToTable("ChecklistItems");
+                });
+
             modelBuilder.Entity("Backend.Models.Entities.Project", b =>
                 {
                     b.Property<Guid>("Id")
@@ -39,6 +71,38 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Backend.Models.Entities.TaskActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TaskItemId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskItemId", "CreatedAt");
+
+                    b.ToTable("TaskActivities");
                 });
 
             modelBuilder.Entity("Backend.Models.Entities.TaskItem", b =>
@@ -84,7 +148,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.TaskItem, bool>>)(task => !task.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(task => !Microsoft.EntityFrameworkCore.EF.Property<bool>(task, "IsDeleted")));
 
                     b.ToTable("Tasks");
                 });
@@ -116,17 +180,39 @@ namespace Backend.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Backend.Models.Entities.ChecklistItem", b =>
+                {
+                    b.HasOne("Backend.Models.Entities.TaskItem", "TaskItem")
+                        .WithMany()
+                        .HasForeignKey("TaskItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskItem");
+                });
+
+            modelBuilder.Entity("Backend.Models.Entities.TaskActivity", b =>
+                {
+                    b.HasOne("Backend.Models.Entities.TaskItem", "TaskItem")
+                        .WithMany()
+                        .HasForeignKey("TaskItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskItem");
+                });
+
             modelBuilder.Entity("Backend.Models.Entities.TaskItem", b =>
                 {
+                    b.HasOne("Backend.Models.Entities.User", "AssignedUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedUserId");
+
                     b.HasOne("Backend.Models.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Backend.Models.Entities.User", "AssignedUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedUserId");
 
                     b.Navigation("AssignedUser");
 

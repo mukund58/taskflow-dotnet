@@ -33,3 +33,13 @@ public class UpdateTaskDto
     public Guid? AssignedUserId { get; set; }
     public DateTime? DueDate { get; set; }
 }
+
+public class CreateChecklistItemDto
+{
+    public string Title { get; set; } = string.Empty;
+}
+
+public class UpdateChecklistItemCompletionDto
+{
+    public bool IsCompleted { get; set; }
+}

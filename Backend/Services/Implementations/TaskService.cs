@@ -15,10 +15,11 @@ public class TaskService : ITaskService
         _context = context;
     }
 
-    public async Task<TaskItem> Create(CreateTaskDto dto)
+    public async Task<TaskItem> Create(CreateTaskDto dto, Guid actorUserId)
     {
         var task = new TaskItem
         {
+            Id = Guid.NewGuid(),
             Title = dto.Title,
             Description = dto.Description,
             ProjectId = dto.ProjectId,
@@ -27,6 +28,16 @@ public class TaskService : ITaskService
         };
 
         _context.Tasks.Add(task);
+
+        _context.TaskActivities.Add(new TaskActivity
+        {
+            Id = Guid.NewGuid(),
+            TaskItemId = task.Id,
+            Action = "TaskCreated",
+            NewValue = task.Title,
+            ActorUserId = actorUserId
+        });
+
         await _context.SaveChangesAsync();
 
         return task;
@@ -52,9 +63,11 @@ public class TaskService : ITaskService
         return await GetTaskByIdOrThrowAsync(taskId);
     }
 
-    public async Task<TaskItem> Update(Guid taskId, UpdateTaskDto dto)
+    public async Task<TaskItem> Update(Guid taskId, UpdateTaskDto dto, Guid actorUserId)
     {
         var task = await GetTaskByIdOrThrowAsync(taskId);
+        var oldStatus = task.Status;
+        var oldAssignedUserId = task.AssignedUserId;
 
         task.Title = dto.Title;
         task.Description = dto.Description;
@@ -62,6 +75,32 @@ public class TaskService : ITaskService
         task.Priority = dto.Priority;
         task.AssignedUserId = dto.AssignedUserId;
         task.DueDate = dto.DueDate;
+
+        if (!string.Equals(oldStatus, task.Status, StringComparison.OrdinalIgnoreCase))
+        {
+            _context.TaskActivities.Add(new TaskActivity
+            {
+                Id = Guid.NewGuid(),
+                TaskItemId = task.Id,
+                Action = "StatusChanged",
+                OldValue = oldStatus,
+                NewValue = task.Status,
+                ActorUserId = actorUserId
+            });
+        }
+
+        if (oldAssignedUserId != task.AssignedUserId)
+        {
+            _context.TaskActivities.Add(new TaskActivity
+            {
+                Id = Guid.NewGuid(),
+                TaskItemId = task.Id,
+                Action = "Assigned",
+                OldValue = oldAssignedUserId?.ToString(),
+                NewValue = task.AssignedUserId?.ToString(),
+                ActorUserId = actorUserId
+            });
+        }
 
         await _context.SaveChangesAsync();
 
@@ -76,22 +115,50 @@ public class TaskService : ITaskService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<TaskItem> UpdateStatus(Guid taskId, string status)
+    public async Task<TaskItem> UpdateStatus(Guid taskId, string status, Guid actorUserId)
     {
         var task = await GetTaskByIdOrThrowAsync(taskId);
+        var oldStatus = task.Status;
 
         task.Status = status;
+
+        if (!string.Equals(oldStatus, status, StringComparison.OrdinalIgnoreCase))
+        {
+            _context.TaskActivities.Add(new TaskActivity
+            {
+                Id = Guid.NewGuid(),
+                TaskItemId = task.Id,
+                Action = "StatusChanged",
+                OldValue = oldStatus,
+                NewValue = status,
+                ActorUserId = actorUserId
+            });
+        }
 
         await _context.SaveChangesAsync();
 
         return task;
     }
 
-    public async Task<TaskItem> Assign(Guid taskId, Guid userId)
+    public async Task<TaskItem> Assign(Guid taskId, Guid userId, Guid actorUserId)
     {
         var task = await GetTaskByIdOrThrowAsync(taskId);
+        var oldAssignedUserId = task.AssignedUserId;
 
         task.AssignedUserId = userId;
+
+        if (oldAssignedUserId != userId)
+        {
+            _context.TaskActivities.Add(new TaskActivity
+            {
+                Id = Guid.NewGuid(),
+                TaskItemId = task.Id,
+                Action = "Assigned",
+                OldValue = oldAssignedUserId?.ToString(),
+                NewValue = userId.ToString(),
+                ActorUserId = actorUserId
+            });
+        }
 
         await _context.SaveChangesAsync();
 
@@ -107,6 +174,69 @@ public class TaskService : ITaskService
         await _context.SaveChangesAsync();
 
         return task;
+    }
+
+    public async Task<List<TaskActivity>> GetActivity(Guid taskId)
+    {
+        await GetTaskByIdOrThrowAsync(taskId);
+
+        return await _context.TaskActivities
+            .AsNoTracking()
+            .Where(x => x.TaskItemId == taskId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<ChecklistItem>> GetChecklistItems(Guid taskId)
+    {
+        await GetTaskByIdOrThrowAsync(taskId);
+
+        return await _context.ChecklistItems
+            .AsNoTracking()
+            .Where(x => x.TaskItemId == taskId)
+            .OrderBy(x => x.Position)
+            .ToListAsync();
+    }
+
+    public async Task<ChecklistItem> AddChecklistItem(Guid taskId, CreateChecklistItemDto dto)
+    {
+        await GetTaskByIdOrThrowAsync(taskId);
+
+        var maxPosition = await _context.ChecklistItems
+            .Where(x => x.TaskItemId == taskId)
+            .Select(x => (int?)x.Position)
+            .MaxAsync();
+
+        var checklistItem = new ChecklistItem
+        {
+            Id = Guid.NewGuid(),
+            TaskItemId = taskId,
+            Title = dto.Title,
+            Position = (maxPosition ?? 0) + 1
+        };
+
+        _context.ChecklistItems.Add(checklistItem);
+        await _context.SaveChangesAsync();
+
+        return checklistItem;
+    }
+
+    public async Task<ChecklistItem> UpdateChecklistItemCompletion(Guid taskId, Guid checklistItemId, bool isCompleted)
+    {
+        await GetTaskByIdOrThrowAsync(taskId);
+
+        var checklistItem = await _context.ChecklistItems
+            .FirstOrDefaultAsync(x => x.TaskItemId == taskId && x.Id == checklistItemId);
+
+        if (checklistItem == null)
+            throw new KeyNotFoundException("Checklist item not found");
+
+        checklistItem.IsCompleted = isCompleted;
+        checklistItem.CompletedAt = isCompleted ? DateTime.UtcNow : null;
+
+        await _context.SaveChangesAsync();
+
+        return checklistItem;
     }
 
     private async Task<TaskItem> GetTaskByIdOrThrowAsync(Guid taskId)
