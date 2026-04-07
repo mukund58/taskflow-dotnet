@@ -95,3 +95,27 @@ public class UpdateTaskDtoValidator : AbstractValidator<UpdateTaskDto>
             .WithMessage("Priority must be one of: Low, Medium, High");
     }
 }
+
+public class CreateCommentDtoValidator : AbstractValidator<CreateCommentDto>
+{
+    public CreateCommentDtoValidator()
+    {
+        RuleFor(x => x.Content)
+            .NotEmpty()
+            .WithMessage("Comment content is required")
+            .MaximumLength(1000)
+            .WithMessage("Comment must not exceed 1000 characters");
+    }
+}
+
+public class UpdateCommentDtoValidator : AbstractValidator<UpdateCommentDto>
+{
+    public UpdateCommentDtoValidator()
+    {
+        RuleFor(x => x.Content)
+            .NotEmpty()
+            .WithMessage("Comment content is required")
+            .MaximumLength(1000)
+            .WithMessage("Comment must not exceed 1000 characters");
+    }
+}

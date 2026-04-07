@@ -30,12 +30,7 @@ public class ProjectController : ControllerBase
     [Authorize(Policy = "ProjectWrite")]
     public async Task<IActionResult> Create([FromBody] ProjectDto dto)
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var creatorUserId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        var project = await _service.Create(dto, creatorUserId);
+        var project = await _service.Create(dto);
         return Ok(ApiResponseDto<Backend.Models.Entities.Project>.Ok(project, "Project created"));
     }
 
