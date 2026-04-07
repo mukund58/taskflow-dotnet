@@ -17,6 +17,16 @@
 - [x] Create task
 - [x] Assign user
 - [x] Update task
+- [x] Delete task
+- [x] Status:
+  - [x] Todo
+  - [x] In Progress
+  - [x] Done
+- [x] Priority:
+  - [x] Low / Medium / High
+- [x] Filter:
+  - [x] By status
+  - [x] By assigned user
 - [x] Soft delete task
 - [x] Status workflow:
   - Todo / In Progress / Done / add Custom status
@@ -25,6 +35,7 @@
 
 - [ ] Priority (Low / Medium / High)
 - [ ] Due date
+
 - [ ] Pagination (`?page=1&pageSize=10`)
 - [ ] Sorting (`?sortBy=createdAt`)
 
@@ -48,11 +59,19 @@
   - assigned
   - status changed
 
-### ✅ Checklist / Subtasks (🔥 HIGH VALUE)
+- [x] Count tasks per user
+- [x] Active tasks
+- [x] Completed tasks
+- [x] Overdue tasks (optional but impressive)
 
 - [ ] Task checklist items
 - [ ] Mark complete/incomplete
 
+- [x] Tasks per user
+- [x] Pending vs completed
+- [x] Workload distribution
+- [x] Total tasks
+- [x] Total users
 ---
 
 ## 👥 Workload & Dashboard
@@ -98,6 +117,8 @@ Assign user with least tasks
 
 ## 🔍 Search
 
+- [x] GET `/users`
+- [x] GET `/users/:id`
 - [ ] Search tasks by title
 
 ## 🏷️ Labels
@@ -105,6 +126,11 @@ Assign user with least tasks
 - [x] GET `/users`
 - [x] GET `/users/:id`
 
+- [x] GET `/project`
+- [x] GET `/project/:id`
+- [x] POST `/project`
+- [x] PUT `/project/:id`
+- [x] DELETE `/project/:id`
 ---
 
 # 🧠 Backend Must-Haves (KEEP CLEAN)
@@ -127,6 +153,15 @@ Assign user with least tasks
 
 ## ⚡ Important
 
+- [x] GET `/dashboard`
+
+### AI
+
+- [ ] POST `/ai/suggest-assignment`
+
+### Dashboard
+
+- [ ] GET `/dashboard`
 - [ ] Pagination + filtering
 - [ ] API versioning `/api/v1`
 - [ ] Seeding

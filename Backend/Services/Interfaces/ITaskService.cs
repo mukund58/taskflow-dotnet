@@ -12,4 +12,5 @@ public interface ITaskService
     Task Delete(Guid taskId);
     Task<TaskItem> UpdateStatus(Guid taskId, string status);
     Task<TaskItem> Assign(Guid taskId, Guid userId);
+    Task<TaskItem> UpdatePriority(Guid taskId, string priority);
 }

@@ -6,11 +6,17 @@ public class CreateTaskDto
     public string Description { get; set; } = string.Empty;
     public Guid ProjectId { get; set; }
     public DateTime? DueDate { get; set; }
+    public string Priority { get; set; } = "Medium"; // Low, Medium, High
 }
 
 public class UpdateTaskStatusDto
 {
     public string Status { get; set; } = string.Empty;
+}
+
+public class UpdateTaskPriorityDto
+{
+    public string Priority { get; set; } = string.Empty;
 }
 
 public class AssignTaskDto
