@@ -96,6 +96,25 @@ public class UpdateTaskDtoValidator : AbstractValidator<UpdateTaskDto>
     }
 }
 
+public class CreateChecklistItemDtoValidator : AbstractValidator<CreateChecklistItemDto>
+{
+    public CreateChecklistItemDtoValidator()
+    {
+        RuleFor(x => x.Title)
+            .NotEmpty()
+            .WithMessage("Checklist item title is required")
+            .MaximumLength(200)
+            .WithMessage("Checklist item title must not exceed 200 characters");
+    }
+}
+
+public class UpdateChecklistItemCompletionDtoValidator : AbstractValidator<UpdateChecklistItemCompletionDto>
+{
+    public UpdateChecklistItemCompletionDtoValidator()
+    {
+        RuleFor(x => x.IsCompleted)
+            .NotNull()
+            .WithMessage("IsCompleted is required");
 public class CreateCommentDtoValidator : AbstractValidator<CreateCommentDto>
 {
     public CreateCommentDtoValidator()
