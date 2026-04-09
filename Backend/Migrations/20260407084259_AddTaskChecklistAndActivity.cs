@@ -11,61 +11,90 @@ namespace Backend.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "ChecklistItems",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TaskItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    IsCompleted = table.Column<bool>(type: "boolean", nullable: false),
-                    Position = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ChecklistItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ChecklistItems_Tasks_TaskItemId",
-                        column: x => x.TaskItemId,
-                        principalTable: "Tasks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            migrationBuilder.Sql(@"
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_name = 'ChecklistItems'
+    ) THEN
+        CREATE TABLE ""ChecklistItems"" (
+            ""Id"" uuid NOT NULL,
+            ""TaskItemId"" uuid NOT NULL,
+            ""Title"" text NOT NULL,
+            ""IsCompleted"" boolean NOT NULL,
+            ""Position"" integer NOT NULL,
+            ""IsDeleted"" boolean NOT NULL DEFAULT FALSE,
+            ""CreatedAt"" timestamp with time zone NOT NULL,
+            ""CompletedAt"" timestamp with time zone,
+            CONSTRAINT ""PK_ChecklistItems"" PRIMARY KEY (""Id""),
+            CONSTRAINT ""FK_ChecklistItems_Tasks_TaskItemId"" FOREIGN KEY (""TaskItemId"") REFERENCES ""Tasks"" (""Id"") ON DELETE CASCADE
+        );
+    ELSE
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'ChecklistItems'
+              AND column_name = 'TaskId'
+        ) AND NOT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'ChecklistItems'
+              AND column_name = 'TaskItemId'
+        ) THEN
+            ALTER TABLE ""ChecklistItems"" RENAME COLUMN ""TaskId"" TO ""TaskItemId"";
+        END IF;
 
-            migrationBuilder.CreateTable(
-                name: "TaskActivities",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TaskItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Action = table.Column<string>(type: "text", nullable: false),
-                    OldValue = table.Column<string>(type: "text", nullable: true),
-                    NewValue = table.Column<string>(type: "text", nullable: true),
-                    ActorUserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TaskActivities", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TaskActivities_Tasks_TaskItemId",
-                        column: x => x.TaskItemId,
-                        principalTable: "Tasks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'ChecklistItems'
+              AND column_name = 'Order'
+        ) AND NOT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'ChecklistItems'
+              AND column_name = 'Position'
+        ) THEN
+            ALTER TABLE ""ChecklistItems"" RENAME COLUMN ""Order"" TO ""Position"";
+        END IF;
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ChecklistItems_TaskItemId_Position",
-                table: "ChecklistItems",
-                columns: new[] { "TaskItemId", "Position" });
+        IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'ChecklistItems'
+              AND column_name = 'IsDeleted'
+        ) THEN
+            ALTER TABLE ""ChecklistItems"" ADD COLUMN ""IsDeleted"" boolean NOT NULL DEFAULT FALSE;
+        END IF;
+    END IF;
+END $$;");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_TaskActivities_TaskItemId_CreatedAt",
-                table: "TaskActivities",
-                columns: new[] { "TaskItemId", "CreatedAt" });
+            migrationBuilder.Sql(@"
+DROP INDEX IF EXISTS ""IX_ChecklistItems_TaskId"";
+CREATE INDEX IF NOT EXISTS ""IX_ChecklistItems_TaskItemId_Position"" ON ""ChecklistItems"" (""TaskItemId"", ""Position"");");
+
+            migrationBuilder.Sql(@"
+CREATE TABLE IF NOT EXISTS ""TaskActivities"" (
+    ""Id"" uuid NOT NULL,
+    ""TaskItemId"" uuid NOT NULL,
+    ""Action"" text NOT NULL,
+    ""OldValue"" text,
+    ""NewValue"" text,
+    ""ActorUserId"" uuid NOT NULL,
+    ""CreatedAt"" timestamp with time zone NOT NULL,
+    CONSTRAINT ""PK_TaskActivities"" PRIMARY KEY (""Id""),
+    CONSTRAINT ""FK_TaskActivities_Tasks_TaskItemId"" FOREIGN KEY (""TaskItemId"") REFERENCES ""Tasks"" (""Id"") ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS ""IX_TaskActivities_TaskItemId_CreatedAt"" ON ""TaskActivities"" (""TaskItemId"", ""CreatedAt"");");
         }
 
         /// <inheritdoc />

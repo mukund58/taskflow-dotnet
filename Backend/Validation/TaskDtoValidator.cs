@@ -40,6 +40,11 @@ public class UpdateTaskStatusDtoValidator : AbstractValidator<UpdateTaskStatusDt
             .WithMessage("Status is required")
             .Must(status => AllowedStatuses.Contains(status))
             .WithMessage("Status must be one of: Todo, InProgress, In Progress, Done");
+
+        RuleFor(x => x.RowVersion)
+            .GreaterThan(0)
+            .When(x => x.RowVersion.HasValue)
+            .WithMessage("RowVersion must be greater than 0 when provided");
     }
 }
 
@@ -50,6 +55,11 @@ public class AssignTaskDtoValidator : AbstractValidator<AssignTaskDto>
         RuleFor(x => x.UserId)
             .NotEmpty()
             .WithMessage("UserId is required");
+
+        RuleFor(x => x.RowVersion)
+            .GreaterThan(0)
+            .When(x => x.RowVersion.HasValue)
+            .WithMessage("RowVersion must be greater than 0 when provided");
     }
 }
 
@@ -93,6 +103,11 @@ public class UpdateTaskDtoValidator : AbstractValidator<UpdateTaskDto>
             .WithMessage("Priority is required")
             .Must(priority => AllowedPriorities.Contains(priority))
             .WithMessage("Priority must be one of: Low, Medium, High");
+
+        RuleFor(x => x.RowVersion)
+            .GreaterThan(0)
+            .When(x => x.RowVersion.HasValue)
+            .WithMessage("RowVersion must be greater than 0 when provided");
     }
 }
 

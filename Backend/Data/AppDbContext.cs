@@ -9,6 +9,8 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Project> Projects { get; set; }
+    public DbSet<ProjectMember> ProjectMembers { get; set; }
+    public DbSet<ProjectInvitation> ProjectInvitations { get; set; }
     public DbSet<TaskItem> Tasks { get; set; }
     public DbSet<ChecklistItem> ChecklistItems { get; set; }
     public DbSet<TaskActivity> TaskActivities { get; set; }
@@ -22,7 +24,60 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<TaskItem>().HasQueryFilter(task => !task.IsDeleted);
+        modelBuilder.Entity<Project>()
+            .HasOne(p => p.OwnerUser)
+            .WithMany()
+            .HasForeignKey(p => p.OwnerUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ProjectMember>()
+            .HasKey(pm => new { pm.ProjectId, pm.UserId });
+
+        modelBuilder.Entity<ProjectMember>()
+            .HasOne(pm => pm.Project)
+            .WithMany()
+            .HasForeignKey(pm => pm.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProjectMember>()
+            .HasOne(pm => pm.User)
+            .WithMany()
+            .HasForeignKey(pm => pm.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProjectMember>()
+            .HasOne(pm => pm.AddedByUser)
+            .WithMany()
+            .HasForeignKey(pm => pm.AddedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ProjectMember>()
+            .HasIndex(pm => new { pm.ProjectId, pm.Role });
+
+        modelBuilder.Entity<ProjectInvitation>()
+            .HasOne(pi => pi.Project)
+            .WithMany()
+            .HasForeignKey(pi => pi.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProjectInvitation>()
+            .HasOne(pi => pi.InvitedByUser)
+            .WithMany()
+            .HasForeignKey(pi => pi.InvitedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ProjectInvitation>()
+            .HasIndex(pi => new { pi.ProjectId, pi.Email, pi.Status });
+
+        var taskEntity = modelBuilder.Entity<TaskItem>();
+        taskEntity.HasQueryFilter(task => !task.IsDeleted);
+        taskEntity.Property(task => task.RowVersion)
+            .IsConcurrencyToken()
+            .HasDefaultValue(1L);
+        taskEntity.HasIndex(task => task.Status);
+        taskEntity.HasIndex(task => task.AssignedUserId);
+        taskEntity.HasIndex(task => task.ProjectId);
+
         modelBuilder.Entity<TaskComment>().HasQueryFilter(comment => !comment.IsDeleted);
         modelBuilder.Entity<ChecklistItem>().HasQueryFilter(item => !item.IsDeleted);
 
@@ -40,6 +95,9 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.TaskItemId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TaskActivity>()
+            .HasQueryFilter(activity => !activity.TaskItem.IsDeleted);
 
         modelBuilder.Entity<TaskActivity>()
             .HasIndex(x => new { x.TaskItemId, x.CreatedAt });
@@ -68,6 +126,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TaskLabel>()
             .HasKey(tl => new { tl.TaskId, tl.LabelId });
 
+        modelBuilder.Entity<TaskLabel>()
+            .HasQueryFilter(taskLabel => !taskLabel.Task.IsDeleted && !taskLabel.Label.IsDeleted);
+
         // TaskAttachment Configuration
         modelBuilder.Entity<TaskAttachment>().HasQueryFilter(ta => !ta.IsDeleted);
         modelBuilder.Entity<TaskAttachment>()
@@ -85,6 +146,9 @@ public class AppDbContext : DbContext
         // TaskWatcher Configuration (Many-to-Many)
         modelBuilder.Entity<TaskWatcher>()
             .HasKey(tw => new { tw.TaskId, tw.UserId });
+
+        modelBuilder.Entity<TaskWatcher>()
+            .HasQueryFilter(taskWatcher => !taskWatcher.Task.IsDeleted);
 
         modelBuilder.Entity<TaskWatcher>()
             .HasOne(tw => tw.Task)
@@ -111,5 +175,36 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(n => n.TaskId)
             .OnDelete(DeleteBehavior.SetNull);
+    }
+
+    public override int SaveChanges()
+    {
+        ApplyTaskRowVersionUpdates();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyTaskRowVersionUpdates();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void ApplyTaskRowVersionUpdates()
+    {
+        foreach (var entry in ChangeTracker.Entries<TaskItem>())
+        {
+            if (entry.State == EntityState.Added && entry.Entity.RowVersion <= 0)
+            {
+                entry.Property(task => task.RowVersion).CurrentValue = 1;
+                continue;
+            }
+
+            if (entry.State != EntityState.Modified)
+                continue;
+
+            var rowVersionProperty = entry.Property(task => task.RowVersion);
+            var nextRowVersion = Math.Max(1, rowVersionProperty.OriginalValue) + 1;
+            rowVersionProperty.CurrentValue = nextRowVersion;
+        }
     }
 }

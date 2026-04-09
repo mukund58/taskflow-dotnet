@@ -23,6 +23,7 @@ public class TaskQueryDto
     public int PageSize { get; set; } = 10;
     public string? Status { get; set; }
     public Guid? AssignedTo { get; set; }
+    public List<Guid>? ProjectIds { get; set; }
     public string? SortBy { get; set; } // createdAt, dueDate, priority, title
     public bool SortDescending { get; set; } = false;
 }

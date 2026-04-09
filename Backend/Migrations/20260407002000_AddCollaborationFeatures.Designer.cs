@@ -56,7 +56,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.Label, bool>>)(label => !label.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(label => !Microsoft.EntityFrameworkCore.EF.Property<bool>(label, "IsDeleted")));
 
                     b.ToTable("Labels");
                 });
@@ -115,7 +115,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.TaskAttachment, bool>>)(ta => !ta.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(ta => !Microsoft.EntityFrameworkCore.EF.Property<bool>(ta, "IsDeleted")));
 
                     b.ToTable("Attachments");
                 });
@@ -179,7 +179,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.Notification, bool>>)(n => !n.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(n => !Microsoft.EntityFrameworkCore.EF.Property<bool>(n, "IsDeleted")));
 
                     b.ToTable("Notifications");
                 });

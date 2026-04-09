@@ -12,6 +12,7 @@ public class CreateTaskDto
 public class UpdateTaskStatusDto
 {
     public string Status { get; set; } = string.Empty;
+    public long? RowVersion { get; set; }
 }
 
 public class UpdateTaskPriorityDto
@@ -22,6 +23,7 @@ public class UpdateTaskPriorityDto
 public class AssignTaskDto
 {
     public Guid UserId { get; set; }
+    public long? RowVersion { get; set; }
 }
 
 public class UpdateTaskDto
@@ -32,6 +34,7 @@ public class UpdateTaskDto
     public string Priority { get; set; } = string.Empty;
     public Guid? AssignedUserId { get; set; }
     public DateTime? DueDate { get; set; }
+    public long? RowVersion { get; set; }
 }
 
 public class UpdateChecklistItemCompletionDto

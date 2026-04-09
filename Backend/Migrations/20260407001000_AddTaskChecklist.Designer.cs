@@ -57,7 +57,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.ChecklistItem, bool>>)(item => !item.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(item => !Microsoft.EntityFrameworkCore.EF.Property<bool>(item, "IsDeleted")));
 
                     b.ToTable("ChecklistItems");
                 });
@@ -112,7 +112,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.TaskComment, bool>>)(comment => !comment.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(comment => !Microsoft.EntityFrameworkCore.EF.Property<bool>(comment, "IsDeleted")));
 
                     b.ToTable("Comments");
                 });
@@ -160,7 +160,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<Backend.Models.Entities.TaskItem, bool>>)(task => !task.IsDeleted));
+                    b.HasQueryFilter((System.Linq.Expressions.LambdaExpression)(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.Dictionary<string, object>, bool>>)(task => !Microsoft.EntityFrameworkCore.EF.Property<bool>(task, "IsDeleted")));
 
                     b.ToTable("Tasks");
                 });

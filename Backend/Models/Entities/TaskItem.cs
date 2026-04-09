@@ -22,4 +22,5 @@ public class TaskItem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DueDate { get; set; } // Optional due date for tasks
     public bool IsDeleted { get; set; } = false; // soft delete
+    public long RowVersion { get; set; } = 1;
 }

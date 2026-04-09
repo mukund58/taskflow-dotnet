@@ -4,6 +4,7 @@ using System.Net;
 using System.Text.Json;
 using Backend.Models.DTOs;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 public class GlobalExceptionMiddleware
 {
@@ -48,8 +49,13 @@ public class GlobalExceptionMiddleware
                  (object?)null),
 
             UnauthorizedAccessException =>
-                ((int)HttpStatusCode.Unauthorized,
-                 "Unauthorized",
+                ((int)HttpStatusCode.Forbidden,
+                 "Forbidden",
+                 (object?)null),
+
+            DbUpdateConcurrencyException =>
+                ((int)HttpStatusCode.Conflict,
+                 "The resource was modified by another request. Refresh and retry.",
                  (object?)null),
 
             _ =>

@@ -11,8 +11,8 @@ public interface ITaskService
     Task<TaskItem> GetById(Guid taskId);
     Task<TaskItem> Update(Guid taskId, UpdateTaskDto dto, Guid actorUserId);
     Task Delete(Guid taskId);
-    Task<TaskItem> UpdateStatus(Guid taskId, string status, Guid actorUserId);
-    Task<TaskItem> Assign(Guid taskId, Guid userId, Guid actorUserId);
+    Task<TaskItem> UpdateStatus(Guid taskId, string status, Guid actorUserId, long? expectedRowVersion = null);
+    Task<TaskItem> Assign(Guid taskId, Guid userId, Guid actorUserId, long? expectedRowVersion = null);
     Task<TaskItem> UpdatePriority(Guid taskId, string priority);
     Task<List<TaskActivity>> GetActivity(Guid taskId);
     Task<List<ChecklistItem>> GetChecklistItems(Guid taskId);

@@ -19,6 +19,7 @@ public class UserService : IUserService
     {
         return await _context.Users
             .AsNoTracking()
+            .Where(u => !u.IsDeleted)
             .Select(u => new UserDto
             {
                 Id = u.Id,
@@ -32,7 +33,7 @@ public class UserService : IUserService
     {
         var user = await _context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == userId);
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
 
         if (user == null)
             throw new KeyNotFoundException("User not found");

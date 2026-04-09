@@ -1,392 +1,263 @@
-## 🎯 CORE (MUST COMPLETE)
+# GDG Hackathon Backend Status
 
-## 🔐 Auth & Security
+Last synced with backend code: 2026-04-09
 
-- [x] Register / Login
+This README reflects what is currently implemented in the backend code under Backend.
+
+## Core Progress
+
+### Auth and Security
+
+- [x] Register and login
 - [x] JWT authentication
-- [x] Role-based access (RBAC)
-  - [x] Admin / Manager / User
-- [x] Ownership check (user can access only their tasks)
-- [x] Password hashing (BCrypt)
-- [ ] Refresh token _(optional but strong)_
+- [x] Role-based access control (Admin, Manager, User, Viewer)
+- [x] Access checks using role + ownership/membership rules
+- [x] Password hashing with BCrypt
+- [x] Soft-deleted users blocked from auth/profile/settings flows
+- [ ] Refresh token flow
 
----
+### Task and Project Core
 
-## 📋 Task + Project System (MAIN CORE)
+- [x] Task CRUD
+- [x] Task assignment endpoint
+- [x] Task status updates (Todo, In Progress, Done)
+- [x] Task priority (Low, Medium, High)
+- [x] Task due date
+- [x] Project due date
+- [x] Task soft delete
+- [x] Pagination on task list
+- [x] Filtering by status and assigned user
+- [x] Sorting (createdAt, dueDate, priority, title, status)
+- [x] Project CRUD
+- [x] Project members and invitations
+- [ ] Search tasks by title and description
+- [ ] Custom per-project workflow statuses
 
-- [x] Create task
-- [x] Assign user
-- [x] Update task
-- [x] Delete task
-- [x] Status:
-  - [x] Todo
-  - [x] In Progress
-  - [x] Done
-- [x] Priority:
-  - [x] Low / Medium / High
-- [x] Filter:
-  - [x] By status
-  - [x] By assigned user
-- [x] Soft delete task
-- [x] Status workflow:
-  - Todo / In Progress / Done / add Custom status
+### Jira-Style Collaboration
 
-### 🔥 ADD THIS (VERY IMPORTANT)
+- [x] Task comments (add/list/update/delete)
+- [x] @mentions in comments
+- [x] In-app mention notifications
+- [x] Email mention notifications (SMTP)
+- [x] Slack/Teams webhook notifications (best effort)
+- [x] Task activity history (TaskCreated, Assigned, StatusChanged)
+- [x] Task checklist CRUD
+- [x] Checklist completion toggle
+- [x] Checklist reorder
+- [x] Checklist completion summary
+- [x] Labels CRUD by project
+- [x] Assign/remove labels on tasks
+- [x] Task attachments metadata + upload + download
+- [x] Task watchers
+- [x] User notifications API (list/unread/read/delete)
 
-- [x] Priority (Low / Medium / High)
-- [x] Due date
+### Dashboard and Workload
 
-- [x] Pagination (`?page=1&pageSize=10`)
-- [x] Sorting (`?sortBy=createdAt`)
+- [x] Dashboard endpoint
+- [x] Total tasks and total users
+- [x] Active/completed/overdue metrics
+- [x] Tasks by status and priority
+- [x] Tasks per user and workload distribution
+- [x] Redis-backed dashboard caching
 
----
+### Platform and Quality
 
-## 🧩 REAL JIRA FEATURES (YOU WERE MISSING)
+- [x] API versioning (v1 URL segment)
+- [x] FluentValidation
+- [x] Global exception middleware with consistent response format
+- [x] Optimistic concurrency (Task RowVersion + HTTP 409 on conflict)
+- [x] DB indexes for task status/assignee/project
+- [x] Transaction-wrapped task writes
+- [x] Rate limiting
+- [x] Serilog request and file logging
+- [x] CORS enabled
+- [x] Startup migration + schema drift repair
+- [x] Seed data support
+- [x] xUnit test project
+- [ ] AI assignment endpoint
+- [ ] SignalR realtime updates
 
-### ✅ Comments System
+## API Endpoints (Current)
 
-- [x] Add comment to task
-- [x] Get task comments
+Most controllers expose both versioned routes (/api/v1/...) and compatibility routes (/api/...).
 
-- [x] Count tasks per user
-- [x] Active tasks
-- [x] Completed tasks
-- [x] Overdue tasks (optional but impressive)
+### Auth
 
-### ✅ Activity Log (VERY IMPORTANT)
+- POST /api/v1/auth/register
+- POST /api/v1/auth/login
 
-- [ ] Track:
-  - task created
-  - assigned
-  - status changed
+### Users, Profile, Settings
 
-- [x] Count tasks per user
-- [x] Active tasks
-- [x] Completed tasks
-- [x] Overdue tasks (optional but impressive)
+- GET /api/v1/users (Admin, Manager)
+- GET /api/v1/users/{id}
+- GET /api/v1/profile
+- PUT /api/v1/profile
+- PUT /api/v1/profile/change-password
+- DELETE /api/v1/profile
+- GET /api/v1/settings
+- PUT /api/v1/settings
 
-- [x] Task checklist items
-- [x] Mark complete/incomplete
+### Projects
 
-- [x] Tasks per user
-- [x] Pending vs completed
-- [x] Workload distribution
-- [x] Total tasks
-- [x] Total users
+- GET /api/v1/projects
+- POST /api/v1/projects
+- GET /api/v1/projects/{id}
+- PUT /api/v1/projects/{id}
+- DELETE /api/v1/projects/{id}
+- GET /api/v1/projects/{id}/members
+- POST /api/v1/projects/{id}/members
+- GET /api/v1/projects/{id}/invitations
+- POST /api/v1/projects/{id}/invitations
 
----
+### Tasks
 
-## 👥 Workload & Dashboard
+- POST /api/v1/tasks
+- GET /api/v1/tasks?page=1&pageSize=10&status=&assignedTo=&sortBy=&sortDescending=
+- GET /api/v1/tasks/{id}
+- PUT /api/v1/tasks/{id}
+- DELETE /api/v1/tasks/{id}
+- PATCH /api/v1/tasks/{id}/status
+- PATCH /api/v1/tasks/{id}/assign
+- GET /api/v1/tasks/{id}/activity
+- PATCH /api/v1/tasks/{id}/checklist/{checklistItemId}
 
-- [x] Tasks per user
-- [x] Active tasks
-- [x] Completed tasks
+### Checklist
 
-### Improve:
+- POST /api/v1/tasks/{taskId}/checklist
+- GET /api/v1/tasks/{taskId}/checklist
+- GET /api/v1/tasks/{taskId}/checklist/summary
+- PUT /api/v1/tasks/{taskId}/checklist/{checklistItemId}
+- PATCH /api/v1/tasks/{taskId}/checklist/{checklistItemId}/toggle
+- DELETE /api/v1/tasks/{taskId}/checklist/{checklistItemId}
+- POST /api/v1/tasks/{taskId}/checklist/reorder
 
-- [x] Overdue tasks
-- [x] Total tasks / users
-- [x] Workload distribution
+### Comments
 
----
+- POST /api/v1/tasks/{taskId}/comments
+- GET /api/v1/tasks/{taskId}/comments
+- PUT /api/v1/tasks/{taskId}/comments/{commentId}
+- DELETE /api/v1/tasks/{taskId}/comments/{commentId}
 
-## 🤖 AI Feature (KEEP SIMPLE)
+### Labels
 
-- [ ] Suggest best user
-- [ ] Suggest priority
-- [ ] Return explanation
+- GET /api/v1/projects/{projectId}/labels
+- POST /api/v1/projects/{projectId}/labels
+- GET /api/v1/projects/{projectId}/labels/{labelId}
+- PUT /api/v1/projects/{projectId}/labels/{labelId}
+- DELETE /api/v1/projects/{projectId}/labels/{labelId}
+- POST /api/v1/projects/{projectId}/labels/tasks/{taskId}/assign?labelId=
+- DELETE /api/v1/projects/{projectId}/labels/tasks/{taskId}/remove?labelId=
+- GET /api/v1/projects/{projectId}/labels/tasks/{taskId}
 
-### 🔥 Add fallback:
+### Attachments
 
-Assign user with least tasks
+- GET /api/v1/tasks/{taskId}/attachments
+- GET /api/v1/tasks/{taskId}/attachments/{attachmentId}
+- GET /api/v1/tasks/{taskId}/attachments/{attachmentId}/download
+- POST /api/v1/tasks/{taskId}/attachments
+- POST /api/v1/tasks/{taskId}/attachments/upload
+- DELETE /api/v1/tasks/{taskId}/attachments/{attachmentId}
 
----
+### Watchers
 
-## 🌐 Deployment
+- POST /api/v1/tasks/{taskId}/watchers
+- POST /api/v1/tasks/{taskId}/watchers/add-user?userId=
+- DELETE /api/v1/tasks/{taskId}/watchers
+- DELETE /api/v1/tasks/{taskId}/watchers/remove-user?userId=
+- GET /api/v1/tasks/{taskId}/watchers
+- GET /api/v1/tasks/{taskId}/watchers/my-watched-tasks
+- GET /api/v1/tasks/{taskId}/watchers/is-watching
 
-- [x] Docker (API + DB)
-- [ ] Deploy backend (Render)
-- [ ] PostgreSQL (cloud)
+### Notifications
 
----
-
-# ⚡ PHASE 2 (IF TIME)
-
-## 🔔 Notifications
-
-- [ ] Notify on assignment
-- [ ] Notify on comment
-
-## 🔍 Search
-
-- [x] GET `/users`
-- [x] GET `/users/:id`
-- [ ] Search tasks by title
-
-## 🏷️ Labels
-
-- [x] GET `/users`
-- [x] GET `/users/:id`
-
-- [x] GET `/project`
-- [x] GET `/project/:id`
-- [x] POST `/project`
-- [x] PUT `/project/:id`
-- [x] DELETE `/project/:id`
-
----
-
-# 🧠 Backend Must-Haves (KEEP CLEAN)
-
-## ✅ Required
-
-- [x] POST `/tasks`
-- [x] GET `/tasks`
-- [x] GET `/tasks/:id`
-- [x] PUT `/tasks/:id`
-- [x] DELETE `/tasks/:id`
-- [x] PATCH `/tasks/:id/status`
-- [x] PATCH `/tasks/:id/assign`
-- [x] JWT auth
-- [x] Authorization (roles + ownership)
-- [x] Validation
-- [x] Exception middleware
-- [x] CORS
-- [ ] Logging (basic is enough)
-
-## ⚡ Important
-
-- [x] GET `/dashboard`
-
-### AI
-
-- [ ] POST `/ai/suggest-assignment`
+- GET /api/v1/notifications?page=1&pageSize=20
+- GET /api/v1/notifications/unread
+- PUT /api/v1/notifications/{notificationId}/read
+- PUT /api/v1/notifications/read-multiple
+- DELETE /api/v1/notifications/{notificationId}
+- DELETE /api/v1/notifications
 
 ### Dashboard
 
-- [x] GET `/dashboard`
-- [x] Pagination + filtering
-- [ ] API versioning `/api/v1`
-- [ ] Seeding
+- GET /api/v1/dashboard (Admin, Manager)
 
-## 🔥 Bonus
+## Gaps and Next Priorities
 
-- [ ] Redis caching
-- [ ] Rate limiting
+- Refresh token issue/rotate endpoint and persistence
+- AI assignment endpoint with deterministic response
+- Search filter on task title/description
+- Custom workflow engine (Blocked/In Review/QA, per project)
+- Bulk actions (assign/status/close)
+- SignalR realtime notification channel
+- Audit log endpoints beyond per-task activity stream
 
----
+## Run with Docker
 
-# 🧠 API FIXES (YOU MISSED)
+This project uses Docker Compose in the Backend folder and starts API + PostgreSQL + Redis.
 
-Add:
+1. Go to backend folder:
 
-- [x] Authentication (JWT)
-- [ ] Authorization (roles + ownership)
-  - [ ] Role-based access
-  - [ ] Resource ownership
-- [x] Validation (FluentValidation)
-- [ ] Logging (Serilog or basic)
-- [x] CORS
-- [x] Exception middleware
+   ```bash
+   cd Backend
+   ```
 
-```text
-GET    /tasks/:id
-GET    /tasks?status=&assignedTo=&page=&pageSize=&sortBy=
-POST   /tasks/:id/comments
-GET    /tasks/:id/comments
-GET    /activity
-```
+2. Create Backend/.env with at least:
 
----
+   - POSTGRES_DB
+   - POSTGRES_USER
+   - POSTGRES_PASSWORD
+   - CONNECTION_STRING
 
-# ⚔️ Team Split (FIXED)
+   Optional:
 
-- [x] Pagination + filtering (`?status=todo&assignedTo=5&page=1&pageSize=10`)
-- [ ] Seeding (test data)
-- [ ] API versioning (`/api/v1`)
-- [x] Rate limiting
-- [x] Soft delete
+   - REDIS_CONNECTION_STRING
+   - SMTP_HOST
+   - SMTP_PORT
+   - SMTP_USERNAME
+   - SMTP_PASSWORD
+   - SMTP_FROM_ADDRESS
+   - SMTP_FROM_NAME
+   - SMTP_USE_SSL
+   - SLACK_WEBHOOK_URL
+   - TEAMS_WEBHOOK_URL
 
-## 🧠 YOU (CORE / HARD)
+3. Start services:
 
-- Auth + JWT
-- RBAC + ownership
-- Activity log
-- AI logic
-- Pagination + filtering
-- Docker + infra
+   ```bash
+   docker compose up --build
+   ```
 
-## 👤 TEAMMATE
+4. Open:
 
-- Project APIs
-- Comments
-- Dashboard
-- User APIs
-- Seeding
-- Swagger / Postman
+   - API: http://localhost:5000
+   - Swagger: http://localhost:5000/swagger
 
----
+5. Stop:
 
-# 🧠 Final Reality Check
+   ```bash
+   docker compose down
+   ```
 
-If you complete:
+   Remove DB volume too:
 
-- [ ] Authorization (roles + ownership)
-  - [ ] Role-based access
-  - [ ] Resource ownership
-- [ ] Refresh token system
-- [x] Exception middleware (global)
-  - [x] Standard API response format
-- [ ] Transactions
-- [ ] Concurrency (RowVersion)
-- [ ] Indexing (DB performance)
-  - [ ] Task.Status
-  - [ ] Task.AssignedUserId
-  - [ ] Task.ProjectId
-- [x] Soft delete
-- [ ] AI assignment (full logic)
-  - [ ] Fallback logic
-  - [ ] Deterministic API shape
-- [ ] SignalR integration
-- [ ] Activity log system
-- [ ] Logging (Serilog)
-- [x] Testing (xUnit)
+   ```bash
+   docker compose down -v
+   ```
 
-### 🧑‍💻 Teammate (Easy / Safe / Visible)
+## Local Dev (Without Docker)
 
-- [x] Update task
-- [x] Delete task
-- [ ] GET `/tasks/:id`
-- [ ] GET `/users`
-- [ ] GET `/users/:id`
-- [x] Tasks per user
-- [x] Pending vs completed
-- [x] Total counts
-- [x] Workload distribution
-- [x] GET `/dashboard`
-- [x] Count tasks per user
-- [x] Active tasks
-- [x] Completed tasks
-- [x] Overdue tasks
-- [x] Pagination
-- [x] Combine filtering + pagination
-- [ ] Backend → Render
-- [ ] DB → PostgreSQL
-- [ ] Basic env setup
-- [ ] Seeding (5 users / 20 tasks / 2 projects)
-- [ ] Basic notifications
-- [x] Priority field
+- Ensure PostgreSQL is running and CONNECTION_STRING is set
+- Optionally set REDIS_CONNECTION_STRING
+- Run API:
 
-👉 You already beat **80–90% students**
+  ```bash
+  dotnet run --project Backend/Backend.csproj
+  ```
 
----
+## Tests
 
-# 🔥 What Makes Your Project “Stand Out”
-
-These 3:
-
-1. Activity log
-2. Checklist/subtasks
-3. AI suggestion
-
----
-
-# ✅ Recommended Next Features
-
-## 1) Task Checklists / Subtasks
-
-- [x] Add `ChecklistItem` entity linked to `TaskItem`
-- [x] Add checklist CRUD endpoints
-- [x] Mark checklist items complete/incomplete
-- [x] Keep checklist order
-- [x] Show task `% complete` rollup
-
-## 2) Comments / Activity Feed / Audit Log
-
-- [x] Add comments per task
-- [x] Get task comments
-- [ ] Track activity history for task changes
-- [ ] Store audit logs for admin/compliance
-
-## 3) RBAC + Permissions per Endpoint
-
-- [x] Add roles: Admin / Manager / User / Viewer
-- [x] Add permission matrix per endpoint/action
-- [ ] Add project-level access control
-- [x] Use `[Authorize(Roles=...)]` where needed
-
-## 4) Pagination + Sorting + Search
-
-- [x] Add paging to `GET /tasks`
-- [x] Add sorting by due date, priority, and created date
-- [ ] Add search by title and description
-- [ ] Keep filtering + pagination together
-
-## 5) More Workflow Depth
-
-- [ ] Add custom workflows per project
-- [ ] Add validation rules for task transitions
-- [ ] Add extra statuses like Blocked / In Review / QA
-
-## 6) Labels, Attachments, Watchers, Notifications
-
-- [ ] Add labels/tags
-- [ ] Add file attachments
-- [ ] Add watchers / @mentions
-- [ ] Add email / Slack / Teams notifications
-
-## 7) Bulk Actions
-
-- [ ] Bulk assign tasks
-- [ ] Bulk change status
-- [ ] Bulk close tasks
-
-## 8) Ownership + Multi-Tenancy
-
-- [ ] Add CreatedBy / UpdatedBy metadata
-- [ ] Add organization / tenant boundaries if needed
-- [ ] Enforce ownership and visibility rules
-
----
-
-# 🐳 Run With Docker
-
-This project uses Docker Compose from the Backend folder. It starts the API and a PostgreSQL container together.
-
-### 1. Go to the backend folder
+Run backend tests:
 
 ```bash
-cd Backend
-```
-
-### 2. Make sure `.env` exists
-
-The backend expects these values in `Backend/.env`:
-
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `CONNECTION_STRING`
-
-### 3. Start the containers
-
-```bash
-docker compose up --build
-```
-
-### 4. Open the API
-
-- API: `http://localhost:5000`
-- Swagger: `http://localhost:5000/swagger`
-
-### 5. Stop the containers
-
-```bash
-docker compose down
-```
-
-If you want to remove the database volume too:
-
-```bash
-docker compose down -v
+dotnet test GDG-Hackathon.sln
 ```

@@ -7,29 +7,33 @@ using Backend.Services.Interfaces;
 using System.Security.Claims;
 
 [ApiController]
+[Asp.Versioning.ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/tasks/{taskId}/checklist")]
 [Route("api/tasks/{taskId}/checklist")]
 [Authorize]
 public class ChecklistController : ControllerBase
 {
     private readonly IChecklistService _service;
     private readonly ITaskService _taskService;
+    private readonly IProjectService _projectService;
 
-    public ChecklistController(IChecklistService service, ITaskService taskService)
+    public ChecklistController(IChecklistService service, ITaskService taskService, IProjectService projectService)
     {
         _service = service;
         _taskService = taskService;
+        _projectService = projectService;
     }
 
     /// <summary>
     /// Add a checklist item to a task
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "TaskRead")]
+    [Authorize(Policy = "TaskWrite")]
     public async Task<IActionResult> AddChecklistItem(Guid taskId, [FromBody] CreateChecklistItemDto dto)
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskWriteAccessAsync(taskId);
             var item = await _service.AddChecklistItemAsync(taskId, dto);
             return Ok(ApiResponseDto<ChecklistItemDto>.Ok(item, "Checklist item added"));
         }
@@ -48,7 +52,7 @@ public class ChecklistController : ControllerBase
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskReadAccessAsync(taskId);
             var items = await _service.GetTaskChecklistAsync(taskId);
             return Ok(ApiResponseDto<List<ChecklistItemDto>>.Ok(items, "Checklist retrieved"));
         }
@@ -67,7 +71,7 @@ public class ChecklistController : ControllerBase
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskReadAccessAsync(taskId);
             var summary = await _service.GetChecklistSummaryAsync(taskId);
             return Ok(ApiResponseDto<TaskChecklistSummaryDto>.Ok(summary, "Checklist summary retrieved"));
         }
@@ -81,12 +85,12 @@ public class ChecklistController : ControllerBase
     /// Update a checklist item
     /// </summary>
     [HttpPut("{checklistItemId}")]
-    [Authorize(Policy = "TaskRead")]
+    [Authorize(Policy = "TaskWrite")]
     public async Task<IActionResult> UpdateChecklistItem(Guid taskId, Guid checklistItemId, [FromBody] UpdateChecklistItemDto dto)
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskWriteAccessAsync(taskId);
             var item = await _service.UpdateChecklistItemAsync(checklistItemId, dto);
             return Ok(ApiResponseDto<ChecklistItemDto>.Ok(item, "Checklist item updated"));
         }
@@ -100,12 +104,12 @@ public class ChecklistController : ControllerBase
     /// Toggle completion status of a checklist item
     /// </summary>
     [HttpPatch("{checklistItemId}/toggle")]
-    [Authorize(Policy = "TaskRead")]
+    [Authorize(Policy = "TaskWrite")]
     public async Task<IActionResult> ToggleCompletion(Guid taskId, Guid checklistItemId)
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskWriteAccessAsync(taskId);
             var item = await _service.ToggleCompletionAsync(checklistItemId);
             return Ok(ApiResponseDto<ChecklistItemDto>.Ok(item, "Checklist item toggled"));
         }
@@ -119,12 +123,12 @@ public class ChecklistController : ControllerBase
     /// Delete a checklist item
     /// </summary>
     [HttpDelete("{checklistItemId}")]
-    [Authorize(Policy = "TaskRead")]
+    [Authorize(Policy = "TaskWrite")]
     public async Task<IActionResult> DeleteChecklistItem(Guid taskId, Guid checklistItemId)
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskWriteAccessAsync(taskId);
             await _service.DeleteChecklistItemAsync(checklistItemId);
             return Ok(ApiResponseDto<object>.Ok(null, "Checklist item deleted"));
         }
@@ -138,12 +142,12 @@ public class ChecklistController : ControllerBase
     /// Reorder checklist items
     /// </summary>
     [HttpPost("reorder")]
-    [Authorize(Policy = "TaskRead")]
+    [Authorize(Policy = "TaskWrite")]
     public async Task<IActionResult> ReorderChecklist(Guid taskId, [FromBody] List<Guid> itemIds)
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskWriteAccessAsync(taskId);
             await _service.ReorderChecklistAsync(taskId, itemIds);
             return Ok(ApiResponseDto<object>.Ok(null, "Checklist reordered"));
         }
@@ -168,7 +172,7 @@ public class ChecklistController : ControllerBase
         return userId;
     }
 
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskAccessAsync(Guid taskId)
+    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskReadAccessAsync(Guid taskId)
     {
         var task = await _taskService.GetById(taskId);
 
@@ -176,9 +180,26 @@ public class ChecklistController : ControllerBase
             return task;
 
         var currentUserId = GetCurrentUserId();
+        var canRead = await _projectService.HasReadAccess(task.ProjectId, currentUserId, elevatedAccess: false);
 
-        if (task.AssignedUserId != currentUserId)
-            throw new UnauthorizedAccessException("You can only access your own tasks");
+        if (!canRead)
+            throw new UnauthorizedAccessException("You do not have read access to this task");
+
+        return task;
+    }
+
+    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskWriteAccessAsync(Guid taskId)
+    {
+        var task = await _taskService.GetById(taskId);
+
+        if (HasElevatedAccess())
+            return task;
+
+        var currentUserId = GetCurrentUserId();
+        var canWrite = await _projectService.HasWriteAccess(task.ProjectId, currentUserId, elevatedAccess: false);
+
+        if (!canWrite)
+            throw new UnauthorizedAccessException("You do not have write access to this task");
 
         return task;
     }

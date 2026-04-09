@@ -4,17 +4,63 @@ using Backend.Models.DTOs;
 using Backend.Data;
 using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 public class DashboardService : IDashboardService
 {
     private readonly AppDbContext _context;
+    private readonly IDistributedCache _cache;
+    private readonly ILogger<DashboardService> _logger;
+    private const string DashboardStatsCacheKey = "dashboard:stats:v1";
+    private static readonly DistributedCacheEntryOptions DashboardCacheOptions = new()
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1),
+        SlidingExpiration = TimeSpan.FromSeconds(30)
+    };
 
-    public DashboardService(AppDbContext context)
+    public DashboardService(AppDbContext context, IDistributedCache cache, ILogger<DashboardService> logger)
     {
         _context = context;
+        _cache = cache;
+        _logger = logger;
     }
 
     public async Task<DashboardStatsDto> GetDashboardStats()
+    {
+        try
+        {
+            var cachedPayload = await _cache.GetStringAsync(DashboardStatsCacheKey);
+            if (!string.IsNullOrWhiteSpace(cachedPayload))
+            {
+                var cachedStats = JsonSerializer.Deserialize<DashboardStatsDto>(cachedPayload);
+                if (cachedStats != null)
+                {
+                    return cachedStats;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to read dashboard stats from cache");
+        }
+
+        var stats = await BuildDashboardStatsAsync();
+
+        try
+        {
+            var payload = JsonSerializer.Serialize(stats);
+            await _cache.SetStringAsync(DashboardStatsCacheKey, payload, DashboardCacheOptions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to cache dashboard stats");
+        }
+
+        return stats;
+    }
+
+    private async Task<DashboardStatsDto> BuildDashboardStatsAsync()
     {
         var now = DateTime.UtcNow;
 
@@ -26,6 +72,7 @@ public class DashboardService : IDashboardService
         // Get all users
         var allUsers = await _context.Users
             .AsNoTracking()
+            .Where(u => !u.IsDeleted)
             .ToListAsync();
 
         // Calculate basic stats

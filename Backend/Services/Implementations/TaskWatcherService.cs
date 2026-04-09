@@ -21,7 +21,7 @@ public class TaskWatcherService : ITaskWatcherService
         if (task == null)
             throw new KeyNotFoundException("Task not found");
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
         if (user == null)
             throw new KeyNotFoundException("User not found");
 
@@ -63,6 +63,7 @@ public class TaskWatcherService : ITaskWatcherService
         return await _context.Set<TaskWatcher>()
             .Where(w => w.TaskId == taskId)
             .Include(w => w.User)
+            .Where(w => !w.User.IsDeleted)
             .Select(w => (object)new
             {
                 w.User.Id,

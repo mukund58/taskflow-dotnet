@@ -26,7 +26,7 @@ public class AuthService : IAuthService
     {
         var existingUser = await _context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            .FirstOrDefaultAsync(x => x.Email == dto.Email && !x.IsDeleted);
 
         if (existingUser != null)
         {
@@ -64,7 +64,7 @@ public class AuthService : IAuthService
     {
         var user = await _context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            .FirstOrDefaultAsync(x => x.Email == dto.Email && !x.IsDeleted);
 
         if (user == null || !BCrypt.Verify(dto.Password, user.PasswordHash))
         {

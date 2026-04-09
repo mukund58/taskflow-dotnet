@@ -17,30 +17,31 @@ public class TaskService : ITaskService
 
     public async Task<TaskItem> Create(CreateTaskDto dto, Guid actorUserId)
     {
-        var task = new TaskItem
+        return await ExecuteInTransactionAsync(() =>
         {
-            Id = Guid.NewGuid(),
-            Title = dto.Title,
-            Description = dto.Description,
-            ProjectId = dto.ProjectId,
-            DueDate = dto.DueDate,
-            Priority = dto.Priority
-        };
+            var task = new TaskItem
+            {
+                Id = Guid.NewGuid(),
+                Title = dto.Title,
+                Description = dto.Description,
+                ProjectId = dto.ProjectId,
+                DueDate = dto.DueDate,
+                Priority = dto.Priority
+            };
 
-        _context.Tasks.Add(task);
+            _context.Tasks.Add(task);
 
-        _context.TaskActivities.Add(new TaskActivity
-        {
-            Id = Guid.NewGuid(),
-            TaskItemId = task.Id,
-            Action = "TaskCreated",
-            NewValue = task.Title,
-            ActorUserId = actorUserId
+            _context.TaskActivities.Add(new TaskActivity
+            {
+                Id = Guid.NewGuid(),
+                TaskItemId = task.Id,
+                Action = "TaskCreated",
+                NewValue = task.Title,
+                ActorUserId = actorUserId
+            });
+
+            return Task.FromResult(task);
         });
-
-        await _context.SaveChangesAsync();
-
-        return task;
     }
 
     public async Task<List<TaskItem>> GetAll(string? status, Guid? assignedTo)
@@ -63,6 +64,11 @@ public class TaskService : ITaskService
         var taskQuery = _context.Tasks
             .AsNoTracking()
             .AsQueryable();
+
+        if (query.ProjectIds is { Count: > 0 })
+            taskQuery = taskQuery.Where(x => query.ProjectIds.Contains(x.ProjectId));
+        else if (query.ProjectIds is { Count: 0 })
+            taskQuery = taskQuery.Where(_ => false);
 
         // Apply filters
         if (!string.IsNullOrEmpty(query.Status))
@@ -122,115 +128,122 @@ public class TaskService : ITaskService
 
     public async Task<TaskItem> Update(Guid taskId, UpdateTaskDto dto, Guid actorUserId)
     {
-        var task = await GetTaskByIdOrThrowAsync(taskId);
-        var oldStatus = task.Status;
-        var oldAssignedUserId = task.AssignedUserId;
-
-        task.Title = dto.Title;
-        task.Description = dto.Description;
-        task.Status = dto.Status;
-        task.Priority = dto.Priority;
-        task.AssignedUserId = dto.AssignedUserId;
-        task.DueDate = dto.DueDate;
-
-        if (!string.Equals(oldStatus, task.Status, StringComparison.OrdinalIgnoreCase))
+        return await ExecuteInTransactionAsync(async () =>
         {
-            _context.TaskActivities.Add(new TaskActivity
+            var task = await GetTaskByIdOrThrowAsync(taskId);
+            ApplyExpectedRowVersion(task, dto.RowVersion);
+
+            var oldStatus = task.Status;
+            var oldAssignedUserId = task.AssignedUserId;
+
+            task.Title = dto.Title;
+            task.Description = dto.Description;
+            task.Status = dto.Status;
+            task.Priority = dto.Priority;
+            task.AssignedUserId = dto.AssignedUserId;
+            task.DueDate = dto.DueDate;
+
+            if (!string.Equals(oldStatus, task.Status, StringComparison.OrdinalIgnoreCase))
             {
-                Id = Guid.NewGuid(),
-                TaskItemId = task.Id,
-                Action = "StatusChanged",
-                OldValue = oldStatus,
-                NewValue = task.Status,
-                ActorUserId = actorUserId
-            });
-        }
+                _context.TaskActivities.Add(new TaskActivity
+                {
+                    Id = Guid.NewGuid(),
+                    TaskItemId = task.Id,
+                    Action = "StatusChanged",
+                    OldValue = oldStatus,
+                    NewValue = task.Status,
+                    ActorUserId = actorUserId
+                });
+            }
 
-        if (oldAssignedUserId != task.AssignedUserId)
-        {
-            _context.TaskActivities.Add(new TaskActivity
+            if (oldAssignedUserId != task.AssignedUserId)
             {
-                Id = Guid.NewGuid(),
-                TaskItemId = task.Id,
-                Action = "Assigned",
-                OldValue = oldAssignedUserId?.ToString(),
-                NewValue = task.AssignedUserId?.ToString(),
-                ActorUserId = actorUserId
-            });
-        }
+                _context.TaskActivities.Add(new TaskActivity
+                {
+                    Id = Guid.NewGuid(),
+                    TaskItemId = task.Id,
+                    Action = "Assigned",
+                    OldValue = oldAssignedUserId?.ToString(),
+                    NewValue = task.AssignedUserId?.ToString(),
+                    ActorUserId = actorUserId
+                });
+            }
 
-        await _context.SaveChangesAsync();
-
-        return task;
+            return task;
+        });
     }
 
     public async Task Delete(Guid taskId)
     {
-        var task = await GetTaskByIdOrThrowAsync(taskId);
-
-        task.IsDeleted = true;
-        await _context.SaveChangesAsync();
+        await ExecuteInTransactionAsync(async () =>
+        {
+            var task = await GetTaskByIdOrThrowAsync(taskId);
+            task.IsDeleted = true;
+        });
     }
 
-    public async Task<TaskItem> UpdateStatus(Guid taskId, string status, Guid actorUserId)
+    public async Task<TaskItem> UpdateStatus(Guid taskId, string status, Guid actorUserId, long? expectedRowVersion = null)
     {
-        var task = await GetTaskByIdOrThrowAsync(taskId);
-        var oldStatus = task.Status;
-
-        task.Status = status;
-
-        if (!string.Equals(oldStatus, status, StringComparison.OrdinalIgnoreCase))
+        return await ExecuteInTransactionAsync(async () =>
         {
-            _context.TaskActivities.Add(new TaskActivity
+            var task = await GetTaskByIdOrThrowAsync(taskId);
+            ApplyExpectedRowVersion(task, expectedRowVersion);
+
+            var oldStatus = task.Status;
+            task.Status = status;
+
+            if (!string.Equals(oldStatus, status, StringComparison.OrdinalIgnoreCase))
             {
-                Id = Guid.NewGuid(),
-                TaskItemId = task.Id,
-                Action = "StatusChanged",
-                OldValue = oldStatus,
-                NewValue = status,
-                ActorUserId = actorUserId
-            });
-        }
+                _context.TaskActivities.Add(new TaskActivity
+                {
+                    Id = Guid.NewGuid(),
+                    TaskItemId = task.Id,
+                    Action = "StatusChanged",
+                    OldValue = oldStatus,
+                    NewValue = status,
+                    ActorUserId = actorUserId
+                });
+            }
 
-        await _context.SaveChangesAsync();
-
-        return task;
+            return task;
+        });
     }
 
-    public async Task<TaskItem> Assign(Guid taskId, Guid userId, Guid actorUserId)
+    public async Task<TaskItem> Assign(Guid taskId, Guid userId, Guid actorUserId, long? expectedRowVersion = null)
     {
-        var task = await GetTaskByIdOrThrowAsync(taskId);
-        var oldAssignedUserId = task.AssignedUserId;
-
-        task.AssignedUserId = userId;
-
-        if (oldAssignedUserId != userId)
+        return await ExecuteInTransactionAsync(async () =>
         {
-            _context.TaskActivities.Add(new TaskActivity
+            var task = await GetTaskByIdOrThrowAsync(taskId);
+            ApplyExpectedRowVersion(task, expectedRowVersion);
+
+            var oldAssignedUserId = task.AssignedUserId;
+            task.AssignedUserId = userId;
+
+            if (oldAssignedUserId != userId)
             {
-                Id = Guid.NewGuid(),
-                TaskItemId = task.Id,
-                Action = "Assigned",
-                OldValue = oldAssignedUserId?.ToString(),
-                NewValue = userId.ToString(),
-                ActorUserId = actorUserId
-            });
-        }
+                _context.TaskActivities.Add(new TaskActivity
+                {
+                    Id = Guid.NewGuid(),
+                    TaskItemId = task.Id,
+                    Action = "Assigned",
+                    OldValue = oldAssignedUserId?.ToString(),
+                    NewValue = userId.ToString(),
+                    ActorUserId = actorUserId
+                });
+            }
 
-        await _context.SaveChangesAsync();
-
-        return task;
+            return task;
+        });
     }
 
     public async Task<TaskItem> UpdatePriority(Guid taskId, string priority)
     {
-        var task = await GetTaskByIdOrThrowAsync(taskId);
-
-        task.Priority = priority;
-
-        await _context.SaveChangesAsync();
-
-        return task;
+        return await ExecuteInTransactionAsync(async () =>
+        {
+            var task = await GetTaskByIdOrThrowAsync(taskId);
+            task.Priority = priority;
+            return task;
+        });
     }
 
     public async Task<List<TaskActivity>> GetActivity(Guid taskId)
@@ -257,43 +270,110 @@ public class TaskService : ITaskService
 
     public async Task<ChecklistItem> AddChecklistItem(Guid taskId, CreateChecklistItemDto dto)
     {
-        await GetTaskByIdOrThrowAsync(taskId);
-
-        var maxPosition = await _context.ChecklistItems
-            .Where(x => x.TaskItemId == taskId)
-            .Select(x => (int?)x.Position)
-            .MaxAsync();
-
-        var checklistItem = new ChecklistItem
+        return await ExecuteInTransactionAsync(async () =>
         {
-            Id = Guid.NewGuid(),
-            TaskItemId = taskId,
-            Title = dto.Title,
-            Position = (maxPosition ?? 0) + 1
-        };
+            await GetTaskByIdOrThrowAsync(taskId);
 
-        _context.ChecklistItems.Add(checklistItem);
-        await _context.SaveChangesAsync();
+            var maxPosition = await _context.ChecklistItems
+                .Where(x => x.TaskItemId == taskId)
+                .Select(x => (int?)x.Position)
+                .MaxAsync();
 
-        return checklistItem;
+            var checklistItem = new ChecklistItem
+            {
+                Id = Guid.NewGuid(),
+                TaskItemId = taskId,
+                Title = dto.Title,
+                Position = (maxPosition ?? 0) + 1
+            };
+
+            _context.ChecklistItems.Add(checklistItem);
+            return checklistItem;
+        });
     }
 
     public async Task<ChecklistItem> UpdateChecklistItemCompletion(Guid taskId, Guid checklistItemId, bool isCompleted)
     {
-        await GetTaskByIdOrThrowAsync(taskId);
+        return await ExecuteInTransactionAsync(async () =>
+        {
+            await GetTaskByIdOrThrowAsync(taskId);
 
-        var checklistItem = await _context.ChecklistItems
-            .FirstOrDefaultAsync(x => x.TaskItemId == taskId && x.Id == checklistItemId);
+            var checklistItem = await _context.ChecklistItems
+                .FirstOrDefaultAsync(x => x.TaskItemId == taskId && x.Id == checklistItemId);
 
-        if (checklistItem == null)
-            throw new KeyNotFoundException("Checklist item not found");
+            if (checklistItem == null)
+                throw new KeyNotFoundException("Checklist item not found");
 
-        checklistItem.IsCompleted = isCompleted;
-        checklistItem.CompletedAt = isCompleted ? DateTime.UtcNow : null;
+            checklistItem.IsCompleted = isCompleted;
+            checklistItem.CompletedAt = isCompleted ? DateTime.UtcNow : null;
 
-        await _context.SaveChangesAsync();
+            return checklistItem;
+        });
+    }
 
-        return checklistItem;
+    private void ApplyExpectedRowVersion(TaskItem task, long? expectedRowVersion)
+    {
+        if (!expectedRowVersion.HasValue)
+            return;
+
+        _context.Entry(task).Property(x => x.RowVersion).OriginalValue = expectedRowVersion.Value;
+    }
+
+    private async Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> action)
+    {
+        if (!SupportsExplicitTransactions())
+        {
+            var fallbackResult = await action();
+            await _context.SaveChangesAsync();
+            return fallbackResult;
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var result = await action();
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return result;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    private async Task ExecuteInTransactionAsync(Func<Task> action)
+    {
+        if (!SupportsExplicitTransactions())
+        {
+            await action();
+            await _context.SaveChangesAsync();
+            return;
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            await action();
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    private bool SupportsExplicitTransactions()
+    {
+        return !string.Equals(
+            _context.Database.ProviderName,
+            "Microsoft.EntityFrameworkCore.InMemory",
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<TaskItem> GetTaskByIdOrThrowAsync(Guid taskId)

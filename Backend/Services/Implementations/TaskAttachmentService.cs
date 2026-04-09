@@ -94,7 +94,7 @@ public class TaskAttachmentService : ITaskAttachmentService
 
     private async Task<TaskAttachmentDto> MapToTaskAttachmentDtoAsync(TaskAttachment attachment)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == attachment.UploadedByUserId);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == attachment.UploadedByUserId && !u.IsDeleted);
 
         return new TaskAttachmentDto
         {
