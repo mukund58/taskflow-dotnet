@@ -1,310 +1,277 @@
-# GDG Hackathon Backend Status
+# GDG Taskboard
 
-Last synced with backend code: 2026-04-09
+> A production-grade, Jira-style task management workspace built for fast-moving teams and hackathon execution.
 
-This README reflects what is currently implemented in the backend code under Backend.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![.NET](https://img.shields.io/badge/.NET-9-purple?logo=dotnet)](https://dotnet.microsoft.com)
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)](https://www.docker.com)
 
-## Core Progress
+---
 
-### Auth and Security
+## 📌 Project Overview
 
-- [x] Register and login
-- [x] JWT authentication
-- [x] Role-based access control (Admin, Manager, User, Viewer)
-- [x] Access checks using role + ownership/membership rules
-- [x] Password hashing with BCrypt
-- [x] Soft-deleted users blocked from auth/profile/settings flows
-- [ ] Refresh token flow
+**GDG Taskboard** is a full-stack task management platform that combines project ownership, task lifecycle management, team collaboration, and real-time dashboard analytics in a single clean UI.
 
-### Task and Project Core
+It was built as part of the **GDG Hackathon 2026** to demonstrate a production-quality, end-to-end web application using modern tools and best practices.
 
-- [x] Task CRUD
-- [x] Task assignment endpoint
-- [x] Task status updates (Todo, In Progress, Done)
-- [x] Task priority (Low, Medium, High)
-- [x] Task due date
-- [x] Project due date
-- [x] Task soft delete
-- [x] Pagination on task list
-- [x] Filtering by status and assigned user
-- [x] Sorting (createdAt, dueDate, priority, title, status)
-- [x] Project CRUD
-- [x] Project members and invitations
-- [ ] Search tasks by title and description
-- [ ] Custom per-project workflow statuses
+---
 
-### Jira-Style Collaboration
+## 🧩 Problem It Solves
 
-- [x] Task comments (add/list/update/delete)
-- [x] @mentions in comments
-- [x] In-app mention notifications
-- [x] Email mention notifications (SMTP)
-- [x] Slack/Teams webhook notifications (best effort)
-- [x] Task activity history (TaskCreated, Assigned, StatusChanged)
-- [x] Task checklist CRUD
-- [x] Checklist completion toggle
-- [x] Checklist reorder
-- [x] Checklist completion summary
-- [x] Labels CRUD by project
-- [x] Assign/remove labels on tasks
-- [x] Task attachments metadata + upload + download
-- [x] Task watchers
-- [x] User notifications API (list/unread/read/delete)
+Hackathon teams and fast-moving engineering squads often lack lightweight tools that are:
 
-### Dashboard and Workload
+- **Easy to spin up** — no complex enterprise setup
+- **Feature-rich** — real task tracking, not just a to-do list
+- **Collaborative** — comments, mentions, watchers, invitations
+- **Insightful** — workload distribution, progress metrics, overdue tracking
 
-- [x] Dashboard endpoint
-- [x] Total tasks and total users
-- [x] Active/completed/overdue metrics
-- [x] Tasks by status and priority
-- [x] Tasks per user and workload distribution
-- [x] Redis-backed dashboard caching
+GDG Taskboard fills this gap: it's a mini Jira that you can self-host in minutes.
 
-### Platform and Quality
+---
 
-- [x] API versioning (v1 URL segment)
-- [x] FluentValidation
-- [x] Global exception middleware with consistent response format
-- [x] Optimistic concurrency (Task RowVersion + HTTP 409 on conflict)
-- [x] DB indexes for task status/assignee/project
-- [x] Transaction-wrapped task writes
-- [x] Rate limiting
-- [x] Serilog request and file logging
-- [x] CORS enabled
-- [x] Startup migration + schema drift repair
-- [x] Seed data support
-- [x] xUnit test project
-- [ ] AI assignment endpoint
-- [ ] SignalR realtime updates
+## ✨ Features
 
-## API Endpoints (Current)
+### 🔐 Auth & Access
+- Register & login with JWT authentication
+- Role-based access control (Admin, Manager, User, Viewer)
+- Ownership and project-level access rules
+- Secure password hashing with BCrypt
 
-Most controllers expose both versioned routes (/api/v1/...) and compatibility routes (/api/...).
+### ✅ Task Management
+- Full CRUD with status, priority, due dates, and soft delete
+- Pagination, filtering (status, assignee), and sorting
+- Task assignment, status transitions (Todo → In Progress → Done)
+- Optimistic concurrency with HTTP 409 conflict detection
 
-### Auth
+### 🗂️ Project & Team Collaboration
+- Project CRUD with member management and invitations
+- Task comments with `@mention` support
+- Email & Slack/Teams webhook notifications on mentions
+- Task activity history and audit log
+- Checklists with drag-to-reorder, completion toggle, and progress summary
+- Labels, attachments (upload/download), and task watchers
 
-- POST /api/v1/auth/register
-- POST /api/v1/auth/login
+### 📊 Dashboard & Analytics
+- Real-time metrics: total, active, completed, overdue tasks
+- Tasks by status and priority breakdown
+- Per-user workload distribution charts
+- Redis-backed caching for performance
 
-### Users, Profile, Settings
+### 🤖 AI Suggestions
+- AI-powered task assignment suggestions (assignee + priority + explanation)
 
-- GET /api/v1/users (Admin, Manager)
-- GET /api/v1/users/{id}
-- GET /api/v1/profile
-- PUT /api/v1/profile
-- PUT /api/v1/profile/change-password
-- DELETE /api/v1/profile
-- GET /api/v1/settings
-- PUT /api/v1/settings
+### 🖥️ Frontend UX
+- Modern landing page with full responsive design (mobile + desktop)
+- Kanban board view + table view toggle
+- Skeleton loaders, empty states, and error states
+- Debounced search with URL-synced query state
+- Optimistic updates for fast interactions
 
-### Projects
+---
 
-- GET /api/v1/projects
-- POST /api/v1/projects
-- GET /api/v1/projects/{id}
-- PUT /api/v1/projects/{id}
-- DELETE /api/v1/projects/{id}
-- GET /api/v1/projects/{id}/members
-- POST /api/v1/projects/{id}/members
-- GET /api/v1/projects/{id}/invitations
-- POST /api/v1/projects/{id}/invitations
+## 🗂️ Repository Structure
 
-### Tasks
+```
+GDG-Hackathon/
+├── Backend/           # .NET 9 Web API (ASP.NET Core)
+│   ├── Controllers/   # API controllers
+│   ├── Services/      # Business logic
+│   ├── Models/        # EF Core models
+│   ├── Data/          # DbContext & migrations
+│   ├── Middleware/    # Global error handling, logging
+│   └── docker-compose.yml
+├── Backend.Tests/     # xUnit test project
+├── frontend/          # Next.js 16 (App Router)
+│   ├── app/           # Pages & routes
+│   ├── components/    # Reusable UI components
+│   ├── services/      # API client modules
+│   ├── store/         # Zustand state management
+│   └── types/         # TypeScript types
+└── README.md
+```
 
-- POST /api/v1/tasks
-- GET /api/v1/tasks?page=1&pageSize=10&status=&assignedTo=&sortBy=&sortDescending=
-- GET /api/v1/tasks/{id}
-- PUT /api/v1/tasks/{id}
-- DELETE /api/v1/tasks/{id}
-- PATCH /api/v1/tasks/{id}/status
-- PATCH /api/v1/tasks/{id}/assign
-- GET /api/v1/tasks/{id}/activity
-- PATCH /api/v1/tasks/{id}/checklist/{checklistItemId}
+---
 
-### Checklist
+## 🛠️ Tech Stack
 
-- POST /api/v1/tasks/{taskId}/checklist
-- GET /api/v1/tasks/{taskId}/checklist
-- GET /api/v1/tasks/{taskId}/checklist/summary
-- PUT /api/v1/tasks/{taskId}/checklist/{checklistItemId}
-- PATCH /api/v1/tasks/{taskId}/checklist/{checklistItemId}/toggle
-- DELETE /api/v1/tasks/{taskId}/checklist/{checklistItemId}
-- POST /api/v1/tasks/{taskId}/checklist/reorder
+| Layer | Technology |
+|---|---|
+| **Frontend** | Next.js 16, TypeScript, Tailwind CSS, Zustand, TanStack Query, Recharts |
+| **Backend** | .NET 9, ASP.NET Core Web API, Entity Framework Core |
+| **Database** | PostgreSQL |
+| **Cache** | Redis |
+| **Auth** | JWT Bearer Tokens |
+| **Notifications** | SMTP Email, Slack Webhook, Teams Webhook |
+| **Testing** | xUnit |
+| **Containerization** | Docker, Docker Compose |
+| **CI/CD** | GitHub Actions → Azure App Service |
 
-### Comments
+---
 
-- POST /api/v1/tasks/{taskId}/comments
-- GET /api/v1/tasks/{taskId}/comments
-- PUT /api/v1/tasks/{taskId}/comments/{commentId}
-- DELETE /api/v1/tasks/{taskId}/comments/{commentId}
+## 🚀 Getting Started
 
-### Labels
+### Prerequisites
 
-- GET /api/v1/projects/{projectId}/labels
-- POST /api/v1/projects/{projectId}/labels
-- GET /api/v1/projects/{projectId}/labels/{labelId}
-- PUT /api/v1/projects/{projectId}/labels/{labelId}
-- DELETE /api/v1/projects/{projectId}/labels/{labelId}
-- POST /api/v1/projects/{projectId}/labels/tasks/{taskId}/assign?labelId=
-- DELETE /api/v1/projects/{projectId}/labels/tasks/{taskId}/remove?labelId=
-- GET /api/v1/projects/{projectId}/labels/tasks/{taskId}
+- [Docker & Docker Compose](https://docs.docker.com/get-docker/)
+- [Node.js 20+](https://nodejs.org/) (for local frontend dev)
+- [.NET 9 SDK](https://dotnet.microsoft.com/download) (for local backend dev)
 
-### Attachments
+---
 
-- GET /api/v1/tasks/{taskId}/attachments
-- GET /api/v1/tasks/{taskId}/attachments/{attachmentId}
-- GET /api/v1/tasks/{taskId}/attachments/{attachmentId}/download
-- POST /api/v1/tasks/{taskId}/attachments
-- POST /api/v1/tasks/{taskId}/attachments/upload
-- DELETE /api/v1/tasks/{taskId}/attachments/{attachmentId}
+### 1. Clone the repository
 
-### Watchers
+```bash
+git clone https://github.com/mukund58/GDG-Hackathon.git
+cd GDG-Hackathon
+```
 
-- POST /api/v1/tasks/{taskId}/watchers
-- POST /api/v1/tasks/{taskId}/watchers/add-user?userId=
-- DELETE /api/v1/tasks/{taskId}/watchers
-- DELETE /api/v1/tasks/{taskId}/watchers/remove-user?userId=
-- GET /api/v1/tasks/{taskId}/watchers
-- GET /api/v1/tasks/{taskId}/watchers/my-watched-tasks
-- GET /api/v1/tasks/{taskId}/watchers/is-watching
+---
 
-### Notifications
+### 2. Backend Setup (Docker — recommended)
 
-- GET /api/v1/notifications?page=1&pageSize=20
-- GET /api/v1/notifications/unread
-- PUT /api/v1/notifications/{notificationId}/read
-- PUT /api/v1/notifications/read-multiple
-- DELETE /api/v1/notifications/{notificationId}
-- DELETE /api/v1/notifications
+```bash
+cd Backend
+```
 
-### Dashboard
+Create a `.env` file in the `Backend/` directory:
 
-- GET /api/v1/dashboard (Admin, Manager)
+```env
+# Required
+POSTGRES_DB=gdgtaskboard
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password
+CONNECTION_STRING=Host=db;Port=5432;Database=gdgtaskboard;Username=postgres;Password=your_password
 
-## Gaps and Next Priorities
+# Optional
+REDIS_CONNECTION_STRING=redis:6379
+FRONTEND_BASE_URL=http://localhost:3000
+INVITATION_TOKEN_SECRET=your_secret_here
 
-- Refresh token issue/rotate endpoint and persistence
-- AI assignment endpoint with deterministic response
-- Search filter on task title/description
-- Custom workflow engine (Blocked/In Review/QA, per project)
-- Bulk actions (assign/status/close)
-- SignalR realtime notification channel
-- Audit log endpoints beyond per-task activity stream
+# SMTP (for email notifications)
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your@email.com
+SMTP_PASSWORD=your_smtp_password
+SMTP_FROM_ADDRESS=no-reply@taskboard.dev
+SMTP_FROM_NAME=GDG Taskboard
+SMTP_USE_SSL=true
 
-## Run with Docker
+# Webhooks (optional)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/...
+TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/...
+```
 
-This project uses Docker Compose in the Backend folder and starts API + PostgreSQL + Redis.
+Start all services (API + PostgreSQL + Redis):
 
-1. Go to backend folder:
+```bash
+docker compose up --build
+```
 
-   ```bash
-   cd Backend
-   ```
+| Service | URL |
+|---|---|
+| API | http://localhost:5000 |
+| Swagger UI | http://localhost:5000/swagger |
 
-2. Create Backend/.env with at least:
+Stop services:
 
-   - POSTGRES_DB
-   - POSTGRES_USER
-   - POSTGRES_PASSWORD
-   - CONNECTION_STRING
+```bash
+docker compose down
 
-   Optional:
+# To also remove the database volume:
+docker compose down -v
+```
 
-    - REDIS_CONNECTION_STRING
-    - FRONTEND_BASE_URL (local default: `http://localhost:3000`; set explicitly per environment—this deployment uses `https://taskflow.mukund.xyz` in production)
-    - INVITATION_TOKEN_SECRET
-    - SMTP_HOST
-   - SMTP_PORT
-   - SMTP_USERNAME
-   - SMTP_PASSWORD
-   - SMTP_FROM_ADDRESS
-   - SMTP_FROM_NAME
-   - SMTP_USE_SSL
-   - SLACK_WEBHOOK_URL
-   - TEAMS_WEBHOOK_URL
+---
 
-3. Start services:
+### 3. Frontend Setup
 
-   ```bash
-   docker compose up --build
-   ```
+```bash
+cd frontend
+```
 
-4. Open:
+Create a `.env.local` file:
 
-   - API: http://localhost:5000
-   - Swagger: http://localhost:5000/swagger
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+NEXT_PUBLIC_API_PATH_PREFIX=/api/v1
+```
 
-5. Stop:
+Install dependencies and start the dev server:
 
-   ```bash
-   docker compose down
-   ```
+```bash
+npm install
+npm run dev
+```
 
-   Remove DB volume too:
+Open **http://localhost:3000** in your browser.
 
-   ```bash
-   docker compose down -v
-   ```
+---
 
-## Local Dev (Without Docker)
+### 4. Local Development (without Docker)
 
-- Ensure PostgreSQL is running and CONNECTION_STRING is set
-- Optionally set REDIS_CONNECTION_STRING
-- Run API:
+**Backend:**
 
-  ```bash
-  dotnet run --project Backend/Backend.csproj
-  ```
+```bash
+# Ensure PostgreSQL is running and CONNECTION_STRING is set in your environment
+dotnet run --project Backend/Backend.csproj
+```
 
-## Tests
-
-Run backend tests:
+**Run tests:**
 
 ```bash
 dotnet test GDG-Hackathon.sln
 ```
 
-## Azure App Service CD (Backend + Frontend + PostgreSQL)
+---
 
-This repository now includes:
+## 📚 Documentation
 
-- Frontend production Docker image: `frontend/Dockerfile`
-- Backend + PostgreSQL compose file for Azure App Service: `Backend/docker-compose.azure.yml`
-- CD workflow: `.github/workflows/azure-appservice-cd.yml`
+| Resource | Link |
+|---|---|
+| **Backend API Reference** | [Backend/README.md](./Backend/README.md) |
+| **Frontend Dev Checklist** | [frontend/README.md](./frontend/README.md) |
+| **Swagger UI** | http://localhost:5000/swagger (when running) |
+| **Contributing Guide** | [CONTRIBUTING.md](./CONTRIBUTING.md) |
+| **Code of Conduct** | [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) |
 
-### Required Azure resources
+### Key API Endpoints
 
-- Azure Container Registry (ACR)
-- 2 Linux Web Apps:
-  - Backend app service (`AZURE_BACKEND_WEBAPP_NAME`)
-  - Frontend app service (`AZURE_FRONTEND_WEBAPP_NAME`)
+```
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+GET    /api/v1/dashboard
+GET    /api/v1/tasks?page=1&status=&assignedTo=&sortBy=
+POST   /api/v1/tasks
+GET    /api/v1/projects
+POST   /api/v1/projects
+GET    /api/v1/notifications
+```
 
-### Required GitHub secrets
+> Full endpoint list available in [Backend/README.md](./Backend/README.md)
 
-- `AZURE_CREDENTIALS` (service principal JSON for `azure/login`)
-- `AZURE_RESOURCE_GROUP`
-- `AZURE_BACKEND_WEBAPP_NAME`
-- `AZURE_FRONTEND_WEBAPP_NAME`
-- `ACR_NAME`
-- `ACR_USERNAME`
-- `ACR_PASSWORD`
-- `FRONTEND_API_BASE_URL` (example: `https://<backend-app>.azurewebsites.net`)
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `REDIS_CONNECTION_STRING` (optional; set empty if unused)
-- `FRONTEND_BASE_URL` (set to your production frontend URL; for this deployment use `https://taskflow.mukund.xyz`)
-- `INVITATION_TOKEN_SECRET`
+---
 
-### Optional GitHub repository variables
+## ☁️ Deployment (Azure)
 
-- `NEXT_PUBLIC_API_PATH_PREFIX` (default: `/api/v1`)
-- `NEXT_PUBLIC_USE_AUTH_COOKIES` (default: `false`)
+This repo includes GitHub Actions workflows for continuous deployment to **Azure App Service**.
 
-### Deployment behavior
+See [Backend/README.md → Azure App Service CD](./Backend/README.md#azure-app-service-cd-backend--frontend--postgresql) for required secrets and deployment behavior.
 
-On push to `main` or `master` (or manual run), the workflow:
+---
 
-1. Builds and pushes backend and frontend Docker images to ACR.
-2. Configures backend app settings and deploys backend + PostgreSQL using `Backend/docker-compose.azure.yml`.
-3. Configures and deploys frontend container to frontend app service.
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on submitting pull requests.
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0** — see [LICENSE](./LICENSE) for details.
+
+---
+
+<div align="center">
+  <strong>Built with ❤️ for GDG Hackathon 2026</strong>
+</div>
