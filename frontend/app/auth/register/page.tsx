@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { register } from "@/services/auth";
+import { ApiError } from "@/services/api";
 
 function resolveSafeRedirect(rawRedirect: string | null) {
   if (!rawRedirect) {
@@ -21,6 +22,15 @@ function resolveSafeRedirect(rawRedirect: string | null) {
   return rawRedirect;
 }
 
+function extractFieldErrors(details: unknown): string[] {
+  if (!details || typeof details !== "object") return [];
+  const errors = (details as Record<string, unknown>).errors;
+  if (!errors || typeof errors !== "object") return [];
+  return Object.values(errors as Record<string, string[]>)
+    .flat()
+    .filter((msg): msg is string => typeof msg === "string");
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,6 +38,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const redirectTarget = resolveSafeRedirect(searchParams.get("redirect"));
@@ -45,12 +56,16 @@ export default function RegisterPage() {
 
     try {
       setError(null);
+      setFieldErrors([]);
       setIsLoading(true);
       await register({ name, email, password });
       router.push(redirectTarget ?? "/dashboard");
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Unable to register";
       setError(message);
+      if (caughtError instanceof ApiError) {
+        setFieldErrors(extractFieldErrors(caughtError.details));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +109,18 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {(error || fieldErrors.length > 0) && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive space-y-1">
+                {error && <p className="font-medium">{error}</p>}
+                {fieldErrors.length > 0 && (
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {fieldErrors.map((msg, i) => (
+                      <li key={i}>{msg}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <Button type="submit" className="w-full" isLoading={isLoading}>
               Create account
