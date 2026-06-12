@@ -36,6 +36,7 @@ function resolveSafeRedirect(rawRedirect: string | null) {
   return rawRedirect;
 }
 
+
 /**
  * RouteGuard uses useSearchParams() which requires a <Suspense> boundary.
  * Without it, Next.js cannot statically prerender pages like /_not-found,

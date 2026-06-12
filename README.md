@@ -58,8 +58,8 @@ GDG Taskboard fills this gap: it's a mini Jira that you can self-host in minutes
 - Per-user workload distribution charts
 - Redis-backed caching for performance
 
-### 🤖 AI Suggestions
-- AI-powered task assignment suggestions (assignee + priority + explanation)
+<!-- ### 🤖 AI Suggestions
+- AI-powered task assignment suggestions (assignee + priority + explanation) -->
 
 ### 🖥️ Frontend UX
 - Modern landing page with full responsive design (mobile + desktop)
@@ -73,7 +73,7 @@ GDG Taskboard fills this gap: it's a mini Jira that you can self-host in minutes
 ## 🗂️ Repository Structure
 
 ```
-GDG-Hackathon/
+Task-flow/
 ├── Backend/           # .NET 9 Web API (ASP.NET Core)
 │   ├── Controllers/   # API controllers
 │   ├── Services/      # Business logic
@@ -271,7 +271,3 @@ Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for 
 This project is licensed under the **GNU General Public License v3.0** — see [LICENSE](./LICENSE) for details.
 
 ---
-
-<div align="center">
-  <strong>Built with ❤️ for GDG Hackathon 2026</strong>
-</div>

@@ -9,6 +9,7 @@ type AuthStoreState = {
   clearSession: () => void;
 };
 
+
 export const useAuthStore = create<AuthStoreState>((set) => ({
   token: null,
   user: null,
