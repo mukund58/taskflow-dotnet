@@ -8,10 +8,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      CONNECTION_STRING: ${CONNECTION_STRING}
-      REDIS_CONNECTION_STRING: ${REDIS_CONNECTION_STRING}
-      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
-      INVITATION_TOKEN_SECRET: ${INVITATION_TOKEN_SECRET}
+      CONNECTION_STRING: ${CONNECTION_STRING:-Host=db;Database=taskflow_db;Username=postgres;Password=postgres}
+      REDIS_CONNECTION_STRING: ${REDIS_CONNECTION_STRING:-cache:6379}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      INVITATION_TOKEN_SECRET: ${INVITATION_TOKEN_SECRET:-super_secret_invitation_token_for_dev_only}
+      JwtSettings__Secret: ${JWT_SECRET:-super_secret_temporary_key_for_dev_that_needs_to_be_long_enough}
     depends_on:
       db:
         condition: service_healthy
@@ -22,13 +23,13 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-taskflow_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 10

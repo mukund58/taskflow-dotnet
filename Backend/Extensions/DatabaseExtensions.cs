@@ -29,7 +29,23 @@ public static class DatabaseExtensions
 
         try
         {
-            var hasProjectTable = DatabaseTableExists(db, "Projects");
+            // First, let's just make sure the database and all migrations are applied.
+            // GetPendingMigrationsAsync() will throw if the database does not exist at all,
+            // but Migrate() will create the database properly before doing anything else.
+            // Simple test to see if database exists
+            bool dbExists = false;
+            try
+            {
+                db.Database.OpenConnection();
+                dbExists = true;
+                db.Database.CloseConnection();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "3D000") // invalid_catalog_name
+            {
+                // Database doesn't exist
+            }
+
+            var hasProjectTable = dbExists && DatabaseTableExists(db, "Projects");
 
             if (!hasProjectTable)
             {
@@ -47,23 +63,23 @@ public static class DatabaseExtensions
                         alignedCount);
                 }
 
-                var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
+                var nextMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
 
-                if (pendingMigrations.Count > 0)
+                if (nextMigrations.Count > 0)
                 {
                     try
                     {
                         db.Database.Migrate();
                         app.Logger.LogInformation(
                             "Applied {PendingMigrationCount} pending migrations",
-                            pendingMigrations.Count);
+                            nextMigrations.Count);
                     }
                     catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.DuplicateTable)
                     {
                         app.Logger.LogError(
                             ex,
                             "Migration failed with duplicate table while applying: {PendingMigrations}",
-                            string.Join(", ", pendingMigrations));
+                            string.Join(", ", nextMigrations));
 
                         throw new InvalidOperationException(
                             "Database schema and migration history are inconsistent. Align __EFMigrationsHistory with existing schema and retry.",
