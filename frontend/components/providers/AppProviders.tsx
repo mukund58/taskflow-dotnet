@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
@@ -36,6 +36,11 @@ function resolveSafeRedirect(rawRedirect: string | null) {
   return rawRedirect;
 }
 
+/**
+ * RouteGuard uses useSearchParams() which requires a <Suspense> boundary.
+ * Without it, Next.js cannot statically prerender pages like /_not-found,
+ * causing Vercel build failures with "prerender-error".
+ */
 function RouteGuard() {
   const router = useRouter();
   const pathname = usePathname();
@@ -104,7 +109,14 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RouteGuard />
+      {/*
+        Suspense is required because RouteGuard calls useSearchParams().
+        Next.js needs a Suspense boundary to statically prerender pages
+        (/_not-found, etc.) without crashing the Vercel build.
+      */}
+      <Suspense fallback={null}>
+        <RouteGuard />
+      </Suspense>
       {children}
       <Toaster
         position="top-right"
