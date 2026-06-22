@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<TaskAttachment> Attachments { get; set; }
     public DbSet<TaskWatcher> TaskWatchers { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -161,6 +162,23 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(tw => tw.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // RefreshToken Configuration
+        modelBuilder.Entity<RefreshToken>()
+            .HasIndex(rt => rt.Token)
+            .IsUnique();
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasOne(rt => rt.User)
+            .WithMany()
+            .HasForeignKey(rt => rt.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasOne(rt => rt.ReplacedByToken)
+            .WithMany()
+            .HasForeignKey(rt => rt.ReplacedByTokenId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Notification Configuration
         modelBuilder.Entity<Notification>().HasQueryFilter(n => !n.IsDeleted);

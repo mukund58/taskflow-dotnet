@@ -9,7 +9,8 @@ public class JwtSettingsOptions
     public string Secret { get; set; } = string.Empty;
     public string Issuer { get; set; } = string.Empty;
     public string Audience { get; set; } = string.Empty;
-    public int ExpirationHours { get; set; } = 24;
+    public int AccessTokenExpirationMinutes { get; set; } = 15;
+    public int RefreshTokenExpirationDays { get; set; } = 7;
 
     public IEnumerable<string> Validate()
     {
@@ -24,7 +25,10 @@ public class JwtSettingsOptions
         if (string.IsNullOrWhiteSpace(Audience))
             yield return $"{SectionName}:Audience is required";
 
-        if (ExpirationHours <= 0)
-            yield return $"{SectionName}:ExpirationHours must be greater than 0";
+        if (AccessTokenExpirationMinutes <= 0)
+            yield return $"{SectionName}:AccessTokenExpirationMinutes must be greater than 0";
+
+        if (RefreshTokenExpirationDays <= 0)
+            yield return $"{SectionName}:RefreshTokenExpirationDays must be greater than 0";
     }
 }

@@ -4,13 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
-using System.Security.Claims;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/notifications")]
 [Authorize]
-public class NotificationController : ControllerBase
+public class NotificationController : BaseApiController
 {
     private readonly INotificationService _notificationService;
 
@@ -149,11 +148,5 @@ public class NotificationController : ControllerBase
         {
             return StatusCode(500, ApiResponseDto<object>.Fail($"Internal server error: {ex.Message}"));
         }
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        return Guid.Parse(userIdClaim?.Value ?? throw new UnauthorizedAccessException("User ID not found in token"));
     }
 }
