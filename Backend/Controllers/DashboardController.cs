@@ -8,7 +8,7 @@ using Backend.Services.Interfaces;
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/dashboard")]
 [Authorize]
-public class DashboardController : ControllerBase
+public class DashboardController : BaseApiController
 {
     private readonly IDashboardService _service;
 

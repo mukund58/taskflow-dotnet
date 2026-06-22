@@ -5,29 +5,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
-using System.Security.Claims;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tasks/{taskId}/comments")]
 [Authorize]
-public class CommentController : ControllerBase
+public class CommentController : TaskAccessController
 {
     private readonly ICommentService _service;
-    private readonly ITaskService _taskService;
-    private readonly IProjectService? _projectService;
 
-    public CommentController(ICommentService service, ITaskService taskService)
-        : this(service, taskService, null)
-    {
-    }
-
-    [ActivatorUtilitiesConstructor]
-    public CommentController(ICommentService service, ITaskService taskService, IProjectService? projectService)
+    public CommentController(ICommentService service, ITaskService taskService, IProjectService projectService)
+        : base(taskService, projectService)
     {
         _service = service;
-        _taskService = taskService;
-        _projectService = projectService;
     }
 
     /// <summary>
@@ -129,70 +119,5 @@ public class CommentController : ControllerBase
         {
             return Forbid();
         }
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
-    }
-
-    private bool HasElevatedAccess()
-    {
-        return User.IsInRole("Admin") || User.IsInRole("Manager");
-    }
-
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskReadAccessAsync(Guid taskId)
-    {
-        var task = await _taskService.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-
-        if (_projectService != null)
-        {
-            var canRead = await _projectService.HasReadAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-            if (!canRead)
-                throw new UnauthorizedAccessException("You do not have read access to this task");
-
-            return task;
-        }
-
-        if (task.AssignedUserId != currentUserId)
-            throw new UnauthorizedAccessException("You can only access your own tasks");
-
-        return task;
-    }
-
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskWriteAccessAsync(Guid taskId)
-    {
-        var task = await _taskService.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-
-        if (_projectService != null)
-        {
-            var canWrite = await _projectService.HasWriteAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-            if (!canWrite)
-                throw new UnauthorizedAccessException("You do not have write access to this task");
-
-            return task;
-        }
-
-        if (task.AssignedUserId != currentUserId)
-            throw new UnauthorizedAccessException("You can only access your own tasks");
-
-        return task;
     }
 }

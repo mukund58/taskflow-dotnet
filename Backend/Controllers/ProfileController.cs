@@ -1,6 +1,5 @@
 namespace Backend.Controllers;
 
-using System.Security.Claims;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/profile")]
 [Authorize]
-public class ProfileController : ControllerBase
+public class ProfileController : BaseApiController
 {
     private readonly IProfileService _profileService;
 
@@ -45,15 +44,5 @@ public class ProfileController : ControllerBase
     {
         await _profileService.DeleteAccountAsync(GetCurrentUserId(), dto);
         return Ok(ApiResponseDto<object>.Ok(null, "Account deleted"));
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
     }
 }

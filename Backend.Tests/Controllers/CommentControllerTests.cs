@@ -16,7 +16,7 @@ public class CommentControllerTests
         var currentUserId = Guid.NewGuid();
         var task = CreateTask(assignedUserId: Guid.NewGuid());
         var commentService = new FakeCommentService();
-        var controller = CreateController(task, commentService, currentUserId, "User");
+        var controller = CreateController(task, commentService, currentUserId, "User", grantAccess: false);
 
         var result = await controller.GetComments(task.Id);
 
@@ -92,9 +92,9 @@ public class CommentControllerTests
         Assert.Equal(currentUserId, commentService.LastUpdateUserId);
     }
 
-    private static CommentController CreateController(TaskItem task, FakeCommentService commentService, Guid currentUserId, string role)
+    private static CommentController CreateController(TaskItem task, FakeCommentService commentService, Guid currentUserId, string role, bool grantAccess = true)
     {
-        var controller = new CommentController(commentService, new FakeTaskService(task));
+        var controller = new CommentController(commentService, new FakeTaskService(task), new FakeProjectService(grantAccess));
 
         controller.ControllerContext = new ControllerContext
         {
@@ -203,5 +203,33 @@ public class CommentControllerTests
         {
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class FakeProjectService : IProjectService
+    {
+        private readonly bool _grantAccess;
+
+        public FakeProjectService(bool grantAccess = true)
+        {
+            _grantAccess = grantAccess;
+        }
+
+        public Task<List<Project>> GetAll() => throw new NotImplementedException();
+        public Task<List<Project>> GetAccessibleProjects(Guid userId, bool elevatedAccess) => throw new NotImplementedException();
+        public Task<Project> Create(ProjectDto dto, Guid creatorUserId) => throw new NotImplementedException();
+        public Task<Project?> GetById(Guid id) => throw new NotImplementedException();
+        public Task<Project?> Update(Guid id, ProjectDto dto) => throw new NotImplementedException();
+        public Task<bool> Delete(Guid id) => throw new NotImplementedException();
+        public Task<bool> ProjectExists(Guid id) => Task.FromResult(true);
+        public Task<bool> HasReadAccess(Guid projectId, Guid userId, bool elevatedAccess) => Task.FromResult(_grantAccess);
+        public Task<bool> HasWriteAccess(Guid projectId, Guid userId, bool elevatedAccess) => Task.FromResult(_grantAccess);
+        public Task<bool> HasManageAccess(Guid projectId, Guid userId, bool elevatedAccess) => throw new NotImplementedException();
+        public Task<List<ProjectMemberDto>> GetMembers(Guid projectId) => throw new NotImplementedException();
+        public Task<ProjectMemberDto> AddMember(Guid projectId, AddProjectMemberDto dto, Guid actorUserId) => throw new NotImplementedException();
+        public Task<List<ProjectInvitationDto>> GetInvitations(Guid projectId) => throw new NotImplementedException();
+        public Task<ProjectInvitationDto> CreateInvitation(Guid projectId, CreateProjectInvitationDto dto, Guid actorUserId) => throw new NotImplementedException();
+        public Task<List<ProjectInvitationLookupDto>> GetInvitationsForUser(Guid userId) => throw new NotImplementedException();
+        public Task<ProjectInvitationLookupDto> GetInvitationById(Guid invitationId) => throw new NotImplementedException();
+        public Task<AcceptProjectInvitationResultDto> AcceptInvitation(Guid invitationId, Guid actorUserId) => throw new NotImplementedException();
     }
 }

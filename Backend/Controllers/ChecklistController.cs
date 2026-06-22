@@ -4,23 +4,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
-using System.Security.Claims;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tasks/{taskId}/checklist")]
 [Authorize]
-public class ChecklistController : ControllerBase
+public class ChecklistController : TaskAccessController
 {
     private readonly IChecklistService _service;
-    private readonly ITaskService _taskService;
-    private readonly IProjectService _projectService;
 
     public ChecklistController(IChecklistService service, ITaskService taskService, IProjectService projectService)
+        : base(taskService, projectService)
     {
         _service = service;
-        _taskService = taskService;
-        _projectService = projectService;
     }
 
     /// <summary>
@@ -154,52 +150,5 @@ public class ChecklistController : ControllerBase
         {
             return NotFound(ApiResponseDto<object>.Fail(ex.Message));
         }
-    }
-
-    private bool HasElevatedAccess()
-    {
-        return User.IsInRole("Admin") || User.IsInRole("Manager");
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
-    }
-
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskReadAccessAsync(Guid taskId)
-    {
-        var task = await _taskService.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-        var canRead = await _projectService.HasReadAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-        if (!canRead)
-            throw new UnauthorizedAccessException("You do not have read access to this task");
-
-        return task;
-    }
-
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskWriteAccessAsync(Guid taskId)
-    {
-        var task = await _taskService.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-        var canWrite = await _projectService.HasWriteAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-        if (!canWrite)
-            throw new UnauthorizedAccessException("You do not have write access to this task");
-
-        return task;
     }
 }

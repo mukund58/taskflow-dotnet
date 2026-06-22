@@ -4,13 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
-using System.Security.Claims;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/projects/{projectId}/labels")]
 [Authorize]
-public class LabelController : ControllerBase
+public class LabelController : BaseApiController
 {
     private readonly ILabelService _labelService;
     private readonly IProjectService _projectService;
@@ -255,21 +254,6 @@ public class LabelController : ControllerBase
         {
             return StatusCode(500, ApiResponseDto<object>.Fail($"Internal server error: {ex.Message}"));
         }
-    }
-
-    private bool HasElevatedAccess()
-    {
-        return User.IsInRole("Admin") || User.IsInRole("Manager");
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
     }
 
     private async Task<Backend.Models.Entities.TaskItem> EnsureTaskAccessInProjectAsync(Guid projectId, Guid taskId)
