@@ -4,13 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
-using System.Security.Claims;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tasks/{taskId}/watchers")]
 [Authorize]
-public class TaskWatcherController : ControllerBase
+public class TaskWatcherController : BaseApiController
 {
     private readonly ITaskWatcherService _watcherService;
     private readonly ITaskService _taskService;
@@ -207,21 +206,6 @@ public class TaskWatcherController : ControllerBase
         {
             return StatusCode(500, ApiResponseDto<object>.Fail($"Internal server error: {ex.Message}"));
         }
-    }
-
-    private bool HasElevatedAccess()
-    {
-        return User.IsInRole("Admin") || User.IsInRole("Manager");
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
     }
 
     private async Task<Backend.Models.Entities.TaskItem> EnsureTaskAccessAsync(Guid taskId)

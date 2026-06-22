@@ -1,6 +1,5 @@
 namespace Backend.Controllers;
 
-using System.Security.Claims;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/settings")]
 [Authorize]
-public class SettingsController : ControllerBase
+public class SettingsController : BaseApiController
 {
     private readonly ISettingsService _settingsService;
 
@@ -33,15 +32,5 @@ public class SettingsController : ControllerBase
         var userId = GetCurrentUserId();
         var settings = await _settingsService.UpdateCurrentUserSettingsAsync(userId, dto);
         return Ok(ApiResponseDto<UserSettingsDto>.Ok(settings, "Settings updated"));
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
     }
 }

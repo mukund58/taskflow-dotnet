@@ -5,21 +5,19 @@ using Microsoft.AspNetCore.Mvc;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
 using Backend.Models.Entities;
-using System.Security.Claims;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tasks")]
 [Authorize]
-public class TaskController : ControllerBase
+public class TaskController : TaskAccessController
 {
     private readonly ITaskService _service;
-    private readonly IProjectService _projectService;
 
     public TaskController(ITaskService service, IProjectService projectService)
+        : base(service, projectService)
     {
         _service = service;
-        _projectService = projectService;
     }
 
     [HttpPost]
@@ -28,10 +26,10 @@ public class TaskController : ControllerBase
     {
         var currentUserId = GetCurrentUserId();
 
-        if (!await _projectService.ProjectExists(dto.ProjectId))
+        if (!await ProjectService.ProjectExists(dto.ProjectId))
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
-        var canWrite = await _projectService.HasWriteAccess(dto.ProjectId, currentUserId, HasElevatedAccess());
+        var canWrite = await ProjectService.HasWriteAccess(dto.ProjectId, currentUserId, HasElevatedAccess());
         if (!canWrite)
             return Forbid();
 
@@ -54,7 +52,7 @@ public class TaskController : ControllerBase
         if (!HasElevatedAccess())
         {
             var currentUserId = GetCurrentUserId();
-            var accessibleProjects = await _projectService.GetAccessibleProjects(currentUserId, elevatedAccess: false);
+            var accessibleProjects = await ProjectService.GetAccessibleProjects(currentUserId, elevatedAccess: false);
             projectIds = accessibleProjects.Select(project => project.Id).ToList();
         }
 
@@ -138,52 +136,5 @@ public class TaskController : ControllerBase
         await EnsureTaskWriteAccessAsync(id);
         var item = await _service.UpdateChecklistItemCompletion(id, checklistItemId, dto.IsCompleted ?? false);
         return Ok(ApiResponseDto<ChecklistItem>.Ok(item, "Checklist item updated"));
-    }
-
-    private bool HasElevatedAccess()
-    {
-        return User.IsInRole("Admin") || User.IsInRole("Manager");
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
-    }
-
-    private async Task<TaskItem> EnsureTaskReadAccessAsync(Guid taskId)
-    {
-        var task = await _service.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-        var canRead = await _projectService.HasReadAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-        if (!canRead)
-            throw new UnauthorizedAccessException("You do not have read access to this task");
-
-        return task;
-    }
-
-    private async Task<TaskItem> EnsureTaskWriteAccessAsync(Guid taskId)
-    {
-        var task = await _service.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-        var canWrite = await _projectService.HasWriteAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-        if (!canWrite)
-            throw new UnauthorizedAccessException("You do not have write access to this task");
-
-        return task;
     }
 }

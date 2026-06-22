@@ -4,13 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
-using System.Security.Claims;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/projects")]
 [Authorize]
-public class ProjectController : ControllerBase
+public class ProjectController : BaseApiController
 {
     private readonly IProjectService _service;
 
@@ -23,7 +22,7 @@ public class ProjectController : ControllerBase
     [Authorize(Policy = "ProjectRead")]
     public async Task<IActionResult> GetAll()
     {
-        var projects = await _service.GetAccessibleProjects(GetCurrentUserId(), HasElevatedAccess());
+        var projects = await _service.GetAccessibleProjects(GetCurrentUserId(), HasElevatedAccess(includeManager: false));
         return Ok(ApiResponseDto<List<Backend.Models.Entities.Project>>.Ok(projects, "Projects retrieved"));
     }
 
@@ -42,7 +41,7 @@ public class ProjectController : ControllerBase
         if (!await _service.ProjectExists(id))
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
-        var canRead = await _service.HasReadAccess(id, GetCurrentUserId(), HasElevatedAccess());
+        var canRead = await _service.HasReadAccess(id, GetCurrentUserId(), HasElevatedAccess(includeManager: false));
         if (!canRead)
             return Forbid();
 
@@ -60,7 +59,7 @@ public class ProjectController : ControllerBase
         if (!await _service.ProjectExists(id))
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
-        var canWrite = await _service.HasWriteAccess(id, GetCurrentUserId(), HasElevatedAccess());
+        var canWrite = await _service.HasWriteAccess(id, GetCurrentUserId(), HasElevatedAccess(includeManager: false));
         if (!canWrite)
             return Forbid();
 
@@ -78,7 +77,7 @@ public class ProjectController : ControllerBase
         if (!await _service.ProjectExists(id))
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
-        var canWrite = await _service.HasWriteAccess(id, GetCurrentUserId(), HasElevatedAccess());
+        var canWrite = await _service.HasWriteAccess(id, GetCurrentUserId(), HasElevatedAccess(includeManager: false));
         if (!canWrite)
             return Forbid();
 
@@ -96,7 +95,7 @@ public class ProjectController : ControllerBase
         if (!await _service.ProjectExists(id))
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
-        var canRead = await _service.HasReadAccess(id, GetCurrentUserId(), HasElevatedAccess());
+        var canRead = await _service.HasReadAccess(id, GetCurrentUserId(), HasElevatedAccess(includeManager: false));
         if (!canRead)
             return Forbid();
 
@@ -112,7 +111,7 @@ public class ProjectController : ControllerBase
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
         var currentUserId = GetCurrentUserId();
-        var canManage = await _service.HasManageAccess(id, currentUserId, HasElevatedAccess());
+        var canManage = await _service.HasManageAccess(id, currentUserId, HasElevatedAccess(includeManager: false));
         if (!canManage)
             return Forbid();
 
@@ -139,7 +138,7 @@ public class ProjectController : ControllerBase
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
         var currentUserId = GetCurrentUserId();
-        var canManage = await _service.HasManageAccess(id, currentUserId, HasElevatedAccess());
+        var canManage = await _service.HasManageAccess(id, currentUserId, HasElevatedAccess(includeManager: false));
         if (!canManage)
             return Forbid();
 
@@ -155,7 +154,7 @@ public class ProjectController : ControllerBase
             return NotFound(ApiResponseDto<object>.Fail("Project not found"));
 
         var currentUserId = GetCurrentUserId();
-        var canManage = await _service.HasManageAccess(id, currentUserId, HasElevatedAccess());
+        var canManage = await _service.HasManageAccess(id, currentUserId, HasElevatedAccess(includeManager: false));
         if (!canManage)
             return Forbid();
 
@@ -224,20 +223,5 @@ public class ProjectController : ControllerBase
         {
             return BadRequest(ApiResponseDto<object>.Fail(ex.Message));
         }
-    }
-
-    private bool HasElevatedAccess()
-    {
-        return User.IsInRole("Admin");
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
     }
 }

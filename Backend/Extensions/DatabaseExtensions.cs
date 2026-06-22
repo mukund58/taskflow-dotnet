@@ -1,20 +1,6 @@
 using Backend.Data;
-using Backend.Middleware;
-using Backend.Services.Interfaces;
-using Backend.Services.Implementations;
-using Backend.Models.DTOs;
-using Backend.Validation;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
-using System.Text;
-using AspNetCoreRateLimit;
-using Microsoft.Extensions.Options;
-using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Backend.Extensions;

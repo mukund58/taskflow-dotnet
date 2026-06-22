@@ -5,36 +5,26 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Backend.Models.DTOs;
 using Backend.Services.Interfaces;
-using System.Security.Claims;
 using Microsoft.AspNetCore.StaticFiles;
 
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tasks/{taskId}/attachments")]
 [Authorize]
-public class TaskAttachmentController : ControllerBase
+public class TaskAttachmentController : TaskAccessController
 {
     private readonly ITaskAttachmentService _attachmentService;
-    private readonly ITaskService _taskService;
-    private readonly IProjectService? _projectService;
     private readonly IWebHostEnvironment? _hostEnvironment;
     private const long MaxUploadFileSizeBytes = 10 * 1024 * 1024;
 
-    public TaskAttachmentController(ITaskAttachmentService attachmentService, ITaskService taskService)
-        : this(attachmentService, taskService, null, null)
-    {
-    }
-
-    [ActivatorUtilitiesConstructor]
     public TaskAttachmentController(
         ITaskAttachmentService attachmentService,
         ITaskService taskService,
-        IProjectService? projectService,
-        IWebHostEnvironment? hostEnvironment)
+        IProjectService projectService,
+        IWebHostEnvironment? hostEnvironment = null)
+        : base(taskService, projectService)
     {
         _attachmentService = attachmentService;
-        _taskService = taskService;
-        _projectService = projectService;
         _hostEnvironment = hostEnvironment;
     }
 
@@ -265,21 +255,6 @@ public class TaskAttachmentController : ControllerBase
         }
     }
 
-    private bool HasElevatedAccess()
-    {
-        return User.IsInRole("Admin") || User.IsInRole("Manager");
-    }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("Invalid user context");
-
-        return userId;
-    }
-
     private string GetTaskAttachmentDirectoryPath(Guid taskId)
     {
         var basePath = _hostEnvironment?.ContentRootPath ?? Directory.GetCurrentDirectory();
@@ -315,55 +290,5 @@ public class TaskAttachmentController : ControllerBase
         {
             // Physical file cleanup should not fail the API flow.
         }
-    }
-
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskReadAccessAsync(Guid taskId)
-    {
-        var task = await _taskService.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-
-        if (_projectService != null)
-        {
-            var canRead = await _projectService.HasReadAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-            if (!canRead)
-                throw new UnauthorizedAccessException("You do not have read access to this task");
-
-            return task;
-        }
-
-        if (task.AssignedUserId != currentUserId)
-            throw new UnauthorizedAccessException("You can only access your own tasks");
-
-        return task;
-    }
-
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskWriteAccessAsync(Guid taskId)
-    {
-        var task = await _taskService.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-
-        if (_projectService != null)
-        {
-            var canWrite = await _projectService.HasWriteAccess(task.ProjectId, currentUserId, elevatedAccess: false);
-
-            if (!canWrite)
-                throw new UnauthorizedAccessException("You do not have write access to this task");
-
-            return task;
-        }
-
-        if (task.AssignedUserId != currentUserId)
-            throw new UnauthorizedAccessException("You can only access your own tasks");
-
-        return task;
     }
 }
