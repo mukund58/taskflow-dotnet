@@ -2,7 +2,7 @@
 .env
 .env.*
 !.env.example
-
+.vscode/
 # Production config (should not be committed)
 appsettings.Production.json
 appsettings.*.Production.json
