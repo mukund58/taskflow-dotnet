@@ -28,7 +28,7 @@ public static class ServiceExtensions
             options.AddPolicy("AllowAllOrigins", policy =>
             {
                 policy.AllowAnyOrigin()
-                      .AllowAnyMethod()
+                      .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                       .AllowAnyHeader();
             });
         });

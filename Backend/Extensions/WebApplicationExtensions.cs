@@ -19,6 +19,7 @@ public static class WebApplicationExtensions
     {
         app.UseSerilogRequestLogging();
 
+        app.UseRouting();
         app.UseCors("AllowAllOrigins");
         app.UseMiddleware<GlobalExceptionMiddleware>();
 
