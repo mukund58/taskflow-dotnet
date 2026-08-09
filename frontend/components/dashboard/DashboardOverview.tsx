@@ -57,6 +57,7 @@ import {
   getProjects,
 } from "@/services/project";
 import { getTasks } from "@/services/task";
+import { useAuthStore } from "@/store/authStore";
 import type { Project, ProjectInvitation, ProjectMember } from "@/types/project";
 import type { TaskItem } from "@/types/task";
 
@@ -311,6 +312,9 @@ function ProjectGridCard({
 }
 
 export function DashboardOverview() {
+  const { user } = useAuthStore();
+  const canCreateProject = user?.role === "Admin" || user?.role === "Manager";
+
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
@@ -709,11 +713,13 @@ export function DashboardOverview() {
               <p className="text-sm text-muted-foreground">Manage all your projects with backend-powered insights.</p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4" />
-                Create project
-              </Button>
+             <div className="flex flex-wrap gap-2">
+              {canCreateProject && (
+                <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Create project
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => void refreshDashboard()} isLoading={isRefreshing}>
                 <RefreshCw className="h-4 w-4" />
                 Refresh

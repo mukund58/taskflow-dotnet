@@ -57,10 +57,12 @@ export async function updateTaskStatus(taskId: string, status: string, rowVersio
   return response.data;
 }
 
-export async function assignTask(taskId: string, userId: string, rowVersion?: number) {
+export async function assignTask(taskId: string, userId: string | null, rowVersion?: number) {
   const response = await apiClient.patch<ApiResponse<TaskItem>>(
     `/api/tasks/${taskId}/assign`,
-    rowVersion === undefined ? { userId } : { userId, rowVersion },
+    rowVersion === undefined
+      ? { userId: userId || null }
+      : { userId: userId || null, rowVersion },
     { auth: true },
   );
 

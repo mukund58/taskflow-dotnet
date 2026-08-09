@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/Label";
 import { ApiError } from "@/services/api";
 import { createProject, getProjects } from "@/services/project";
 import { getTasks } from "@/services/task";
+import { useAuthStore } from "@/store/authStore";
 
 function getErrorMessage(error: unknown, fallback = "Something went wrong") {
   if (error instanceof ApiError) {
@@ -35,6 +36,9 @@ function getErrorMessage(error: unknown, fallback = "Something went wrong") {
 }
 
 export function ProjectListPanel() {
+  const { user } = useAuthStore();
+  const canCreateProject = user?.role === "Admin" || user?.role === "Manager";
+
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -108,10 +112,12 @@ export function ProjectListPanel() {
           <h2 className="text-2xl font-semibold tracking-tight">Projects</h2>
           <p className="text-sm text-muted-foreground">Create and manage projects connected to your tasks.</p>
         </div>
-        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Create Project
-        </Button>
+        {canCreateProject && (
+          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Create Project
+          </Button>
+        )}
       </div>
 
       <div className="relative">
