@@ -67,7 +67,7 @@ public class GlobalExceptionMiddleware
 
             _ =>
                 ((int)HttpStatusCode.InternalServerError,
-                 "An unexpected error occurred",
+                 $"An unexpected error occurred: {exception.Message} - {exception.StackTrace}",
                  (object?)null)
         };
 
