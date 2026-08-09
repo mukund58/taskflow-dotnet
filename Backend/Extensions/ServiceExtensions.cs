@@ -21,19 +21,31 @@ namespace Backend.Extensions;
 
 public static class ServiceExtensions
 {
+    // public static void AddCorsConfig(this IServiceCollection services)
+    // {
+    //     services.AddCors(options =>
+    //     {
+    //         options.AddPolicy("AllowAllOrigins", policy =>
+    //         {
+    //             policy.AllowAnyOrigin()
+    //                   .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+    //                   .AllowAnyHeader();
+    //         });
+    //     });
+    // }
     public static void AddCorsConfig(this IServiceCollection services)
     {
         services.AddCors(options =>
         {
             options.AddPolicy("AllowAllOrigins", policy =>
             {
-                policy.AllowAnyOrigin()
-                      .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-                      .AllowAnyHeader();
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
             });
         });
     }
-
     public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration["CONNECTION_STRING"];
