@@ -148,7 +148,7 @@ public class CommentControllerTests
         public Task<TaskItem> Update(Guid taskId, UpdateTaskDto dto, Guid actorUserId) => throw new NotImplementedException();
         public Task Delete(Guid taskId) => throw new NotImplementedException();
         public Task<TaskItem> UpdateStatus(Guid taskId, string status, Guid actorUserId, long? expectedRowVersion = null) => throw new NotImplementedException();
-        public Task<TaskItem> Assign(Guid taskId, Guid userId, Guid actorUserId, long? expectedRowVersion = null) => throw new NotImplementedException();
+        public Task<TaskItem> Assign(Guid taskId, Guid? userId, Guid actorUserId, long? expectedRowVersion = null) => throw new NotImplementedException();
         public Task<TaskItem> UpdatePriority(Guid taskId, string priority) => throw new NotImplementedException();
         public Task<List<TaskActivity>> GetActivity(Guid taskId) => throw new NotImplementedException();
         public Task<List<ChecklistItem>> GetChecklistItems(Guid taskId) => throw new NotImplementedException();
