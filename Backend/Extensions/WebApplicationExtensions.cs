@@ -19,8 +19,23 @@ public static class WebApplicationExtensions
     {
         app.UseSerilogRequestLogging();
 
+        app.Use(async (context, next) =>
+        {
+            context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+            context.Response.Headers.Append("Access-Control-Allow-Headers", "*");
+            context.Response.Headers.Append("Access-Control-Max-Age", "86400");
+
+            if (context.Request.Method == "OPTIONS")
+            {
+                context.Response.StatusCode = 204;
+                return;
+            }
+
+            await next(context);
+        });
+
         app.UseRouting();
-        app.UseCors("AllowAllOrigins");
         app.UseMiddleware<GlobalExceptionMiddleware>();
 
         // HTTPS Redirection can be enabled for production if you have proper certs, but we leave it out/commented for local docker
