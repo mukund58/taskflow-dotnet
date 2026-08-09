@@ -19,8 +19,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # OPTIONAL: keep Azure login only if you deploy to Azure later in this workflow.
-      # If this workflow is ONLY building/pushing images, you can remove this step.
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -32,18 +30,37 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # ==============================
+      # BACKEND
+      # ==============================
+
       - name: Build and push backend image (Docker Hub)
         run: |
           BACKEND_IMAGE="docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${BACKEND_IMAGE_NAME}:${GITHUB_SHA}"
           BACKEND_IMAGE_LATEST="docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${BACKEND_IMAGE_NAME}:latest"
 
-          docker build -f Backend/Dockerfile \
+          docker build \
+            -f Backend/Dockerfile \
             -t "$BACKEND_IMAGE" \
             -t "$BACKEND_IMAGE_LATEST" \
             Backend
 
           docker push "$BACKEND_IMAGE"
           docker push "$BACKEND_IMAGE_LATEST"
+
+      - name: Deploy backend to Azure Container Apps
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az containerapp update \
+              --name taskflow-backend \
+              --resource-group taskflow-rg \
+              --image "docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${BACKEND_IMAGE_NAME}:${GITHUB_SHA}" \
+              --revision-suffix "${GITHUB_SHA:0:7}"
+
+      # ==============================
+      # FRONTEND IMAGE
+      # ==============================
 
       - name: Build and push frontend image (Docker Hub)
         run: |
