@@ -49,7 +49,7 @@ public class TaskController : TaskAccessController
     {
         List<Guid>? projectIds = null;
 
-        if (!HasElevatedAccess())
+        if (!HasElevatedAccess(includeManager: false))
         {
             var currentUserId = GetCurrentUserId();
             var accessibleProjects = await ProjectService.GetAccessibleProjects(currentUserId, elevatedAccess: false);

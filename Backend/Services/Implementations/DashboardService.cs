@@ -26,11 +26,12 @@ public class DashboardService : IDashboardService
         _logger = logger;
     }
 
-    public async Task<DashboardStatsDto> GetDashboardStats()
+    public async Task<DashboardStatsDto> GetDashboardStats(Guid userId, bool elevatedAccess)
     {
+        var cacheKey = elevatedAccess ? DashboardStatsCacheKey : $"{DashboardStatsCacheKey}:{userId}";
         try
         {
-            var cachedPayload = await _cache.GetStringAsync(DashboardStatsCacheKey);
+            var cachedPayload = await _cache.GetStringAsync(cacheKey);
             if (!string.IsNullOrWhiteSpace(cachedPayload))
             {
                 var cachedStats = JsonSerializer.Deserialize<DashboardStatsDto>(cachedPayload);
@@ -45,12 +46,12 @@ public class DashboardService : IDashboardService
             _logger.LogWarning(ex, "Failed to read dashboard stats from cache");
         }
 
-        var stats = await BuildDashboardStatsAsync();
+        var stats = await BuildDashboardStatsAsync(userId, elevatedAccess);
 
         try
         {
             var payload = JsonSerializer.Serialize(stats);
-            await _cache.SetStringAsync(DashboardStatsCacheKey, payload, DashboardCacheOptions);
+            await _cache.SetStringAsync(cacheKey, payload, DashboardCacheOptions);
         }
         catch (Exception ex)
         {
@@ -60,20 +61,52 @@ public class DashboardService : IDashboardService
         return stats;
     }
 
-    private async Task<DashboardStatsDto> BuildDashboardStatsAsync()
+    private async Task<DashboardStatsDto> BuildDashboardStatsAsync(Guid userId, bool elevatedAccess)
     {
         var now = DateTime.UtcNow;
 
+        List<Guid>? accessibleProjectIds = null;
+        if (!elevatedAccess)
+        {
+            accessibleProjectIds = await _context.Projects
+                .AsNoTracking()
+                .Where(p =>
+                    p.OwnerUserId == userId ||
+                    _context.ProjectMembers.Any(pm => pm.ProjectId == p.Id && pm.UserId == userId))
+                .Select(p => p.Id)
+                .ToListAsync();
+        }
+
         // Get all tasks (excluding soft deleted)
-        var allTasks = await _context.Tasks
-            .AsNoTracking()
-            .ToListAsync();
+        var tasksQuery = _context.Tasks.AsNoTracking().AsQueryable();
+        if (accessibleProjectIds != null)
+        {
+            tasksQuery = tasksQuery.Where(t => accessibleProjectIds.Contains(t.ProjectId));
+        }
+        var allTasks = await tasksQuery.ToListAsync();
 
         // Get all users
-        var allUsers = await _context.Users
-            .AsNoTracking()
-            .Where(u => !u.IsDeleted)
-            .ToListAsync();
+        var usersQuery = _context.Users.AsNoTracking().Where(u => !u.IsDeleted);
+        if (accessibleProjectIds != null)
+        {
+            var accessibleUserIds = await _context.ProjectMembers
+                .AsNoTracking()
+                .Where(pm => accessibleProjectIds.Contains(pm.ProjectId))
+                .Select(pm => pm.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            var ownersList = await _context.Projects
+                .AsNoTracking()
+                .Where(p => accessibleProjectIds.Contains(p.Id) && p.OwnerUserId.HasValue)
+                .Select(p => p.OwnerUserId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            var unionUserIds = accessibleUserIds.Union(ownersList).ToList();
+            usersQuery = usersQuery.Where(u => unionUserIds.Contains(u.Id));
+        }
+        var allUsers = await usersQuery.ToListAsync();
 
         // Calculate basic stats
         var totalTasks = allTasks.Count;

@@ -27,7 +27,7 @@ public class ProjectController : BaseApiController
     }
 
     [HttpPost]
-    [Authorize(Policy = "ProjectWrite")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Create([FromBody] ProjectDto dto)
     {
         var project = await _service.Create(dto, GetCurrentUserId());

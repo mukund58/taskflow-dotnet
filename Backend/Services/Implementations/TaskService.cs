@@ -209,7 +209,7 @@ public class TaskService : ITaskService
         });
     }
 
-    public async Task<TaskItem> Assign(Guid taskId, Guid userId, Guid actorUserId, long? expectedRowVersion = null)
+    public async Task<TaskItem> Assign(Guid taskId, Guid? userId, Guid actorUserId, long? expectedRowVersion = null)
     {
         return await ExecuteInTransactionAsync(async () =>
         {
@@ -217,9 +217,10 @@ public class TaskService : ITaskService
             ApplyExpectedRowVersion(task, expectedRowVersion);
 
             var oldAssignedUserId = task.AssignedUserId;
-            task.AssignedUserId = userId;
+            Guid? newAssignedUserId = (userId == Guid.Empty || userId == null) ? null : userId;
+            task.AssignedUserId = newAssignedUserId;
 
-            if (oldAssignedUserId != userId)
+            if (oldAssignedUserId != newAssignedUserId)
             {
                 _context.TaskActivities.Add(new TaskActivity
                 {
@@ -227,7 +228,7 @@ public class TaskService : ITaskService
                     TaskItemId = task.Id,
                     Action = "Assigned",
                     OldValue = oldAssignedUserId?.ToString(),
-                    NewValue = userId.ToString(),
+                    NewValue = newAssignedUserId?.ToString(),
                     ActorUserId = actorUserId
                 });
             }

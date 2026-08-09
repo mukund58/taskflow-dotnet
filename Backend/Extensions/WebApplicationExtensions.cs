@@ -19,8 +19,8 @@ public static class WebApplicationExtensions
     {
         app.UseSerilogRequestLogging();
 
-        app.UseMiddleware<GlobalExceptionMiddleware>();
         app.UseCors("AllowAllOrigins");
+        app.UseMiddleware<GlobalExceptionMiddleware>();
 
         // HTTPS Redirection can be enabled for production if you have proper certs, but we leave it out/commented for local docker
         // app.UseHttpsRedirection();

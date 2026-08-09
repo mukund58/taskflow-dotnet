@@ -5,6 +5,7 @@ using Backend.Models.Entities;
 using Backend.Data;
 using Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 public class ProjectService : IProjectService
 {
@@ -19,12 +20,18 @@ public class ProjectService : IProjectService
     private readonly AppDbContext _context;
     private readonly IEmailService? _emailService;
     private readonly IConfiguration? _configuration;
+    private readonly ILogger<ProjectService>? _logger;
 
-    public ProjectService(AppDbContext context, IEmailService? emailService = null, IConfiguration? configuration = null)
+    public ProjectService(
+        AppDbContext context,
+        IEmailService? emailService = null,
+        IConfiguration? configuration = null,
+        ILogger<ProjectService>? logger = null)
     {
         _context = context;
         _emailService = emailService;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<List<Project>> GetAll()
@@ -335,13 +342,20 @@ public class ProjectService : IProjectService
 
         if (_emailService != null)
         {
-            await _emailService.SendProjectInvitationEmail(
-                email,
-                project.Name,
-                invitedByName ?? "Project Admin",
-                role,
-                expiresAt,
-                invitationUrl);
+            try
+            {
+                await _emailService.SendProjectInvitationEmail(
+                    email,
+                    project.Name,
+                    invitedByName ?? "Project Admin",
+                    role,
+                    expiresAt,
+                    invitationUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Failed to send project invitation email to {Email}", email);
+            }
         }
 
         _context.ProjectInvitations.Add(invitation);

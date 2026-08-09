@@ -263,7 +263,7 @@ public class LabelController : BaseApiController
         if (task.ProjectId != projectId)
             throw new KeyNotFoundException("Task not found in this project");
 
-        if (HasElevatedAccess())
+        if (HasElevatedAccess(includeManager: false))
             return task;
 
         var currentUserId = GetCurrentUserId();
@@ -280,7 +280,7 @@ public class LabelController : BaseApiController
         if (!await _projectService.ProjectExists(projectId))
             throw new KeyNotFoundException("Project not found");
 
-        var canRead = await _projectService.HasReadAccess(projectId, currentUserId, HasElevatedAccess());
+        var canRead = await _projectService.HasReadAccess(projectId, currentUserId, HasElevatedAccess(includeManager: false));
         if (!canRead)
             throw new UnauthorizedAccessException("You do not have access to this project");
     }
@@ -292,7 +292,7 @@ public class LabelController : BaseApiController
         if (!await _projectService.ProjectExists(projectId))
             throw new KeyNotFoundException("Project not found");
 
-        var canWrite = await _projectService.HasWriteAccess(projectId, currentUserId, HasElevatedAccess());
+        var canWrite = await _projectService.HasWriteAccess(projectId, currentUserId, HasElevatedAccess(includeManager: false));
         if (!canWrite)
             throw new UnauthorizedAccessException("You do not have write access to this project");
     }

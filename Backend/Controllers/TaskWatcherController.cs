@@ -9,15 +9,14 @@ using Backend.Services.Interfaces;
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/tasks/{taskId}/watchers")]
 [Authorize]
-public class TaskWatcherController : BaseApiController
+public class TaskWatcherController : TaskAccessController
 {
     private readonly ITaskWatcherService _watcherService;
-    private readonly ITaskService _taskService;
 
-    public TaskWatcherController(ITaskWatcherService watcherService, ITaskService taskService)
+    public TaskWatcherController(ITaskWatcherService watcherService, ITaskService taskService, IProjectService projectService)
+        : base(taskService, projectService)
     {
         _watcherService = watcherService;
-        _taskService = taskService;
     }
 
     /// <summary>
@@ -29,7 +28,7 @@ public class TaskWatcherController : BaseApiController
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskReadAccessAsync(taskId);
             var userId = GetCurrentUserId();
             await _watcherService.AddWatcherAsync(taskId, userId);
             return Ok(ApiResponseDto<object>.Ok(null, "You are now watching this task"));
@@ -61,7 +60,7 @@ public class TaskWatcherController : BaseApiController
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskWriteAccessAsync(taskId);
             await _watcherService.AddWatcherAsync(taskId, userId);
             return Ok(ApiResponseDto<object>.Ok(null, "User is now watching this task"));
         }
@@ -92,7 +91,7 @@ public class TaskWatcherController : BaseApiController
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskReadAccessAsync(taskId);
             var userId = GetCurrentUserId();
             await _watcherService.RemoveWatcherAsync(taskId, userId);
             return Ok(ApiResponseDto<object>.Ok(null, "You are no longer watching this task"));
@@ -120,7 +119,7 @@ public class TaskWatcherController : BaseApiController
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskWriteAccessAsync(taskId);
             await _watcherService.RemoveWatcherAsync(taskId, userId);
             return Ok(ApiResponseDto<object>.Ok(null, "User is no longer watching this task"));
         }
@@ -147,7 +146,7 @@ public class TaskWatcherController : BaseApiController
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskReadAccessAsync(taskId);
             var watchers = await _watcherService.GetTaskWatchersAsync(taskId);
             return Ok(ApiResponseDto<object>.Ok(watchers, "Task watchers retrieved successfully"));
         }
@@ -193,7 +192,7 @@ public class TaskWatcherController : BaseApiController
     {
         try
         {
-            await EnsureTaskAccessAsync(taskId);
+            await EnsureTaskReadAccessAsync(taskId);
             var userId = GetCurrentUserId();
             var isWatching = await _watcherService.IsWatchingAsync(taskId, userId);
             return Ok(ApiResponseDto<object>.Ok(new { IsWatching = isWatching }, "Watcher status retrieved"));
@@ -206,20 +205,5 @@ public class TaskWatcherController : BaseApiController
         {
             return StatusCode(500, ApiResponseDto<object>.Fail($"Internal server error: {ex.Message}"));
         }
-    }
-
-    private async Task<Backend.Models.Entities.TaskItem> EnsureTaskAccessAsync(Guid taskId)
-    {
-        var task = await _taskService.GetById(taskId);
-
-        if (HasElevatedAccess())
-            return task;
-
-        var currentUserId = GetCurrentUserId();
-
-        if (task.AssignedUserId != currentUserId)
-            throw new UnauthorizedAccessException("You can only access your own tasks");
-
-        return task;
     }
 }

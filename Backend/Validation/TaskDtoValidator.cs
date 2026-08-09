@@ -52,10 +52,6 @@ public class AssignTaskDtoValidator : AbstractValidator<AssignTaskDto>
 {
     public AssignTaskDtoValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEmpty()
-            .WithMessage("UserId is required");
-
         RuleFor(x => x.RowVersion)
             .GreaterThan(0)
             .When(x => x.RowVersion.HasValue)

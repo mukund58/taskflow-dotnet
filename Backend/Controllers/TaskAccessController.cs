@@ -27,7 +27,7 @@ public abstract class TaskAccessController : BaseApiController
     {
         var task = await TaskService.GetById(taskId);
 
-        if (HasElevatedAccess())
+        if (HasElevatedAccess(includeManager: false))
             return task;
 
         var currentUserId = GetCurrentUserId();
@@ -47,7 +47,7 @@ public abstract class TaskAccessController : BaseApiController
     {
         var task = await TaskService.GetById(taskId);
 
-        if (HasElevatedAccess())
+        if (HasElevatedAccess(includeManager: false))
             return task;
 
         var currentUserId = GetCurrentUserId();

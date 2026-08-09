@@ -22,7 +22,7 @@ public class UpdateTaskPriorityDto
 
 public class AssignTaskDto
 {
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
     public long? RowVersion { get; set; }
 }
 

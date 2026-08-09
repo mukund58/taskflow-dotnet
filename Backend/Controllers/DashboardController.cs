@@ -21,6 +21,6 @@ public class DashboardController : BaseApiController
     [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetStats()
     {
-        return Ok(await _service.GetDashboardStats());
+        return Ok(await _service.GetDashboardStats(GetCurrentUserId(), HasElevatedAccess(includeManager: false)));
     }
 }

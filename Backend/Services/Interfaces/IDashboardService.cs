@@ -4,5 +4,5 @@ using Backend.Models.DTOs;
 
 public interface IDashboardService
 {
-    Task<DashboardStatsDto> GetDashboardStats();
+    Task<DashboardStatsDto> GetDashboardStats(Guid userId, bool elevatedAccess);
 }
