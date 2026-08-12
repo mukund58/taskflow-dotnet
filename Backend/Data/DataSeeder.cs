@@ -14,20 +14,42 @@ public class DataSeeder
         _logger = logger;
     }
 
-    public async Task SeedAsync(SeedingOptions options, CancellationToken cancellationToken = default)
+    public async Task SeedAsync(
+        SeedingOptions options,
+        CancellationToken cancellationToken = default)
     {
         var targetUsers = Math.Max(1, options.Users);
         var targetProjects = Math.Max(1, options.Projects);
         var targetTasks = Math.Max(1, options.Tasks);
 
-        var users = await EnsureUsersAsync(targetUsers, options.DefaultPassword, cancellationToken);
-        var projects = await EnsureProjectsAsync(targetProjects, users, cancellationToken);
-        await EnsureProjectOwnerMembershipsAsync(projects, cancellationToken);
-        await EnsureTasksAsync(targetTasks, users, projects, cancellationToken);
+        var users = await EnsureUsersAsync(
+            targetUsers,
+            options.DefaultPassword,
+            cancellationToken);
 
-        var userCount = await _context.Users.CountAsync(u => !u.IsDeleted, cancellationToken);
-        var projectCount = await _context.Projects.CountAsync(cancellationToken);
-        var taskCount = await _context.Tasks.CountAsync(cancellationToken);
+        var projects = await EnsureProjectsAsync(
+            targetProjects,
+            users,
+            cancellationToken);
+
+        await EnsureProjectOwnerMembershipsAsync(
+            projects,
+            cancellationToken);
+
+        await EnsureTasksAsync(
+            targetTasks,
+            users,
+            projects,
+            cancellationToken);
+
+        var userCount = await _context.Users
+            .CountAsync(u => !u.IsDeleted, cancellationToken);
+
+        var projectCount = await _context.Projects
+            .CountAsync(cancellationToken);
+
+        var taskCount = await _context.Tasks
+            .CountAsync(cancellationToken);
 
         _logger.LogInformation(
             "Seeding completed. Users={UserCount}, Projects={ProjectCount}, Tasks={TaskCount}",
@@ -36,7 +58,14 @@ public class DataSeeder
             taskCount);
     }
 
-    private async Task<List<User>> EnsureUsersAsync(int targetUsers, string defaultPassword, CancellationToken cancellationToken)
+    // =========================================================
+    // USERS
+    // =========================================================
+
+    private async Task<List<User>> EnsureUsersAsync(
+        int targetUsers,
+        string defaultPassword,
+        CancellationToken cancellationToken)
     {
         var users = await _context.Users
             .Where(u => !u.IsDeleted)
@@ -45,11 +74,15 @@ public class DataSeeder
 
         if (users.Count >= targetUsers)
         {
-            _logger.LogInformation("Users already seeded. Current count: {UserCount}", users.Count);
+            _logger.LogInformation(
+                "Users already seeded. Current count: {UserCount}",
+                users.Count);
+
             return users;
         }
 
         var seedUsers = BuildUserDefinitions(targetUsers);
+
         var existingEmails = users
             .Select(u => u.Email)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -70,17 +103,28 @@ public class DataSeeder
 
             users.Add(user);
             _context.Users.Add(user);
+
             existingEmails.Add(seedUser.Email);
         }
 
         if (_context.ChangeTracker.HasChanges())
             await _context.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Users seeded. Current count: {UserCount}", users.Count);
+        _logger.LogInformation(
+            "Users seeded. Current count: {UserCount}",
+            users.Count);
+
         return users;
     }
 
-    private async Task<List<Project>> EnsureProjectsAsync(int targetProjects, IReadOnlyList<User> users, CancellationToken cancellationToken)
+    // =========================================================
+    // PROJECTS
+    // =========================================================
+
+    private async Task<List<Project>> EnsureProjectsAsync(
+        int targetProjects,
+        IReadOnlyList<User> users,
+        CancellationToken cancellationToken)
     {
         var projects = await _context.Projects
             .OrderBy(p => p.Name)
@@ -88,19 +132,28 @@ public class DataSeeder
 
         if (projects.Count >= targetProjects)
         {
-            _logger.LogInformation("Projects already seeded. Current count: {ProjectCount}", projects.Count);
+            _logger.LogInformation(
+                "Projects already seeded. Current count: {ProjectCount}",
+                projects.Count);
+
             return projects;
         }
 
-        var ownerIds = users.Select(u => u.Id).ToArray();
+        var projectDefinitions = BuildProjectDefinitions(targetProjects);
+
+        var ownerIds = users
+            .Select(u => u.Id)
+            .ToArray();
 
         for (var i = projects.Count; i < targetProjects; i++)
         {
+            var definition = projectDefinitions[i];
+
             var project = new Project
             {
                 Id = Guid.NewGuid(),
-                Name = $"Seed Project {i + 1}",
-                Description = "Auto-generated seeded project",
+                Name = definition.Name,
+                Description = definition.Description,
                 OwnerUserId = ownerIds[i % ownerIds.Length]
             };
 
@@ -111,11 +164,20 @@ public class DataSeeder
         if (_context.ChangeTracker.HasChanges())
             await _context.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Projects seeded. Current count: {ProjectCount}", projects.Count);
+        _logger.LogInformation(
+            "Projects seeded. Current count: {ProjectCount}",
+            projects.Count);
+
         return projects;
     }
 
-    private async Task EnsureProjectOwnerMembershipsAsync(IReadOnlyList<Project> projects, CancellationToken cancellationToken)
+    // =========================================================
+    // PROJECT MEMBERS
+    // =========================================================
+
+    private async Task EnsureProjectOwnerMembershipsAsync(
+        IReadOnlyList<Project> projects,
+        CancellationToken cancellationToken)
     {
         foreach (var project in projects)
         {
@@ -125,7 +187,11 @@ public class DataSeeder
             var ownerUserId = project.OwnerUserId.Value;
 
             var alreadyMember = await _context.ProjectMembers
-                .AnyAsync(pm => pm.ProjectId == project.Id && pm.UserId == ownerUserId, cancellationToken);
+                .AnyAsync(
+                    pm =>
+                        pm.ProjectId == project.Id &&
+                        pm.UserId == ownerUserId,
+                    cancellationToken);
 
             if (alreadyMember)
                 continue;
@@ -144,37 +210,69 @@ public class DataSeeder
             await _context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task EnsureTasksAsync(int targetTasks, IReadOnlyList<User> users, IReadOnlyList<Project> projects, CancellationToken cancellationToken)
+    // =========================================================
+    // TASKS
+    // =========================================================
+
+    private async Task EnsureTasksAsync(
+        int targetTasks,
+        IReadOnlyList<User> users,
+        IReadOnlyList<Project> projects,
+        CancellationToken cancellationToken)
     {
-        var existingCount = await _context.Tasks.CountAsync(cancellationToken);
+        var existingCount = await _context.Tasks
+            .CountAsync(cancellationToken);
+
         if (existingCount >= targetTasks)
         {
-            _logger.LogInformation("Tasks already seeded. Current count: {TaskCount}", existingCount);
+            _logger.LogInformation(
+                "Tasks already seeded. Current count: {TaskCount}",
+                existingCount);
+
             return;
         }
 
-        var statuses = new[] { "Todo", "In Progress", "Done" };
-        var priorities = new[] { "Low", "Medium", "High" };
-        var userIds = users.Select(u => u.Id).ToArray();
-        var projectIds = projects.Select(p => p.Id).ToArray();
+        var taskDefinitions = BuildTaskDefinitions();
+
+        var userIds = users
+            .Select(u => u.Id)
+            .ToArray();
+
+        var projectIds = projects
+            .Select(p => p.Id)
+            .ToArray();
+
         var random = new Random(42);
 
         for (var i = existingCount; i < targetTasks; i++)
         {
-            var status = statuses[i % statuses.Length];
-            var createdAt = DateTime.UtcNow.AddDays(-random.Next(1, 30));
-            var dueDate = DateTime.UtcNow.Date.AddDays(random.Next(-7, 21));
+            var definition = taskDefinitions[i % taskDefinitions.Count];
+
+            var createdAt = DateTime.UtcNow
+                .AddDays(-random.Next(2, 30));
+
+            var dueDate = DateTime.UtcNow
+                .Date
+                .AddDays(random.Next(-3, 21));
 
             var task = new TaskItem
             {
                 Id = Guid.NewGuid(),
-                Title = $"Seed Task {i + 1}",
-                Description = "Auto-generated seeded task",
-                Status = status,
-                Priority = priorities[i % priorities.Length],
+
+                Title = definition.Title,
+
+                Description = definition.Description,
+
+                Status = definition.Status,
+
+                Priority = definition.Priority,
+
                 ProjectId = projectIds[i % projectIds.Length],
+
                 AssignedUserId = userIds[i % userIds.Length],
+
                 CreatedAt = createdAt,
+
                 DueDate = dueDate
             };
 
@@ -184,18 +282,58 @@ public class DataSeeder
         if (_context.ChangeTracker.HasChanges())
             await _context.SaveChangesAsync(cancellationToken);
 
-        var finalCount = await _context.Tasks.CountAsync(cancellationToken);
-        _logger.LogInformation("Tasks seeded. Current count: {TaskCount}", finalCount);
+        var finalCount = await _context.Tasks
+            .CountAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Tasks seeded. Current count: {TaskCount}",
+            finalCount);
     }
 
-    private static List<SeedUserDefinition> BuildUserDefinitions(int targetUsers)
+    // =========================================================
+    // USER DEFINITIONS
+    // =========================================================
+
+    private static List<SeedUserDefinition> BuildUserDefinitions(
+        int targetUsers)
     {
         var defaults = new List<SeedUserDefinition>
         {
-            new("Seed Admin", "seed.admin@example.com", "Admin"),
-            new("Seed Manager", "seed.manager@example.com", "Manager"),
-            new("Seed User", "seed.user@example.com", "User"),
-            new("Seed Viewer", "seed.viewer@example.com", "Viewer")
+            new(
+                "Aarav Patel",
+                "aarav.patel@example.com",
+                "Admin"
+            ),
+
+            new(
+                "Priya Shah",
+                "priya.shah@example.com",
+                "Manager"
+            ),
+
+            new(
+                "Rahul Mehta",
+                "rahul.mehta@example.com",
+                "User"
+            ),
+
+            new(
+                "Neha Joshi",
+                "neha.joshi@example.com",
+                "User"
+            ),
+
+            new(
+                "Kunal Desai",
+                "kunal.desai@example.com",
+                "User"
+            ),
+
+            new(
+                "Ananya Patel",
+                "ananya.patel@example.com",
+                "Viewer"
+            )
         };
 
         var users = new List<SeedUserDefinition>();
@@ -208,12 +346,215 @@ public class DataSeeder
             }
             else
             {
-                users.Add(new SeedUserDefinition($"Seed User {i + 1}", $"seed.user{i + 1}@example.com", "User"));
+                users.Add(
+                    new SeedUserDefinition(
+                        $"Developer {i + 1}",
+                        $"developer{i + 1}@example.com",
+                        "User"
+                    )
+                );
             }
         }
 
         return users;
     }
 
-    private sealed record SeedUserDefinition(string Name, string Email, string Role);
+    // =========================================================
+    // PROJECT DEFINITIONS
+    // =========================================================
+
+    private static List<SeedProjectDefinition> BuildProjectDefinitions(
+        int targetProjects)
+    {
+        var defaults = new List<SeedProjectDefinition>
+        {
+            new(
+                "TaskFlow",
+                "A project management platform for organizing teams, tasks, and project workflows."
+            ),
+
+            new(
+                "Inventory Management System",
+                "Internal application for tracking products, stock levels, suppliers, and inventory movements."
+            ),
+
+            new(
+                "Customer Portal",
+                "Web portal for customers to submit requests, track progress, and communicate with support."
+            ),
+
+            new(
+                "Mobile App Redesign",
+                "Redesign of the mobile application with improved navigation, accessibility, and user experience."
+            ),
+
+            new(
+                "Analytics Dashboard",
+                "Dashboard for monitoring application usage, team productivity, and project performance."
+            ),
+
+            new(
+                "Authentication Service",
+                "Centralized authentication and authorization service for internal applications."
+            )
+        };
+
+        var projects = new List<SeedProjectDefinition>();
+
+        for (var i = 0; i < targetProjects; i++)
+        {
+            if (i < defaults.Count)
+            {
+                projects.Add(defaults[i]);
+            }
+            else
+            {
+                projects.Add(
+                    new SeedProjectDefinition(
+                        $"Internal Project {i + 1}",
+                        "Internal development project for the engineering team."
+                    )
+                );
+            }
+        }
+
+        return projects;
+    }
+
+    // =========================================================
+    // TASK DEFINITIONS
+    // =========================================================
+
+    private static List<SeedTaskDefinition> BuildTaskDefinitions()
+    {
+        return new List<SeedTaskDefinition>
+        {
+            new(
+                "Set up PostgreSQL database",
+                "Create the initial database schema and configure the PostgreSQL connection.",
+                "Done",
+                "High"
+            ),
+
+            new(
+                "Implement JWT authentication",
+                "Add login, token generation, and authentication middleware.",
+                "Done",
+                "High"
+            ),
+
+            new(
+                "Create project management API",
+                "Implement endpoints for creating, updating, and deleting projects.",
+                "In Progress",
+                "High"
+            ),
+
+            new(
+                "Build project dashboard",
+                "Create the dashboard UI showing project progress and recent activity.",
+                "In Progress",
+                "Medium"
+            ),
+
+            new(
+                "Add task assignment",
+                "Allow project managers to assign tasks to team members.",
+                "In Progress",
+                "Medium"
+            ),
+
+            new(
+                "Implement task filtering",
+                "Add filtering by status, priority, project, and assigned user.",
+                "Todo",
+                "Medium"
+            ),
+
+            new(
+                "Add API validation",
+                "Validate incoming request data and return meaningful validation errors.",
+                "Done",
+                "High"
+            ),
+
+            new(
+                "Improve error handling",
+                "Add centralized exception handling and consistent API error responses.",
+                "Done",
+                "Medium"
+            ),
+
+            new(
+                "Write API documentation",
+                "Document the main API endpoints and request/response formats.",
+                "Todo",
+                "Low"
+            ),
+
+            new(
+                "Add project member management",
+                "Allow project owners to add and remove team members.",
+                "In Progress",
+                "High"
+            ),
+
+            new(
+                "Implement search",
+                "Add search functionality for projects and tasks.",
+                "Todo",
+                "Medium"
+            ),
+
+            new(
+                "Optimize database queries",
+                "Review frequently used queries and add indexes where necessary.",
+                "Todo",
+                "High"
+            ),
+
+            new(
+                "Add automated tests",
+                "Create unit and integration tests for the core project and task services.",
+                "In Progress",
+                "High"
+            ),
+
+            new(
+                "Review responsive layout",
+                "Ensure the dashboard works correctly on tablet and mobile screen sizes.",
+                "Todo",
+                "Low"
+            ),
+
+            new(
+                "Prepare production deployment",
+                "Configure environment variables, logging, and production deployment settings.",
+                "Todo",
+                "High"
+            )
+        };
+    }
+
+    // =========================================================
+    // RECORDS
+    // =========================================================
+
+    private sealed record SeedUserDefinition(
+        string Name,
+        string Email,
+        string Role
+    );
+
+    private sealed record SeedProjectDefinition(
+        string Name,
+        string Description
+    );
+
+    private sealed record SeedTaskDefinition(
+        string Title,
+        string Description,
+        string Status,
+        string Priority
+    );
 }
